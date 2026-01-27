@@ -2,7 +2,7 @@
 {
   services.tailscale = {
     enable = true;
-    extraSetFlags = [ "--netfilter-mode=nodivert" ];
+  extraSetFlags = [ "--netfilter-mode=nodivert" ];
   };
   networking.firewall = {
     trustedInterfaces = [ "tailscale0" ];

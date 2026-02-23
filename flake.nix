@@ -25,11 +25,6 @@
       url = "github:nix-community/nixos-apple-silicon/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -38,7 +33,6 @@
       nixpkgs,
       nix-darwin,
       home-manager,
-      nixos-generators,
       ...
     }:
     let
@@ -117,7 +111,6 @@
           modules = commonModules ++ [
             ./modules/nixos
             ./hosts/vermeer
-            nixos-generators.nixosModules.all-formats
           ];
         };
       };

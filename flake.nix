@@ -97,8 +97,6 @@
           modules = commonModules ++ [
             ./modules/nixos
             ./hosts/ardmore
-            home-manager.nixosModules.home-manager
-            homeManagerConfig
           ];
         };
 
@@ -120,8 +118,6 @@
             ./modules/nixos
             ./hosts/vermeer
             nixos-generators.nixosModules.all-formats
-            home-manager.nixosModules.home-manager
-            homeManagerConfig
           ];
         };
       };

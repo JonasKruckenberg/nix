@@ -1,5 +1,9 @@
 { lib, ... }:
 {
+  imports = [
+    ../../services/tailscale.nix
+  ];
+
   networking.hostName = "vermeer";
 
   # Boot loader config is format-dependent; nixos-generators handles this per-format.
@@ -11,10 +15,10 @@
     fsType = "ext4";
   };
 
-  services.openssh = {
-    enable = true;
-    settings.PermitRootLogin = "prohibit-password";
-  };
+  # services.openssh = {
+  #   enable = true;
+  #   settings.PermitRootLogin = "prohibit-password";
+  # };
 
   nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
 

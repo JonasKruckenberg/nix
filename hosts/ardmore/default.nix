@@ -3,6 +3,7 @@
   imports = [
     ./hardware-configuration.nix
     inputs.apple-silicon-support.nixosModules.apple-silicon-support
+    ../../services/tailscale.nix
   ];
 
   networking.hostName = "ardmore";

@@ -1,6 +1,4 @@
-# direnv
-.direnv/
-
-# nix
 result
 result-*
+.direnv
+.DS_Store

@@ -10,7 +10,7 @@
     };
 
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -91,6 +91,8 @@
           modules = commonModules ++ [
             ./modules/nixos
             ./hosts/ardmore
+            home-manager.nixosModules.home-manager
+            homeManagerConfig
           ];
         };
 

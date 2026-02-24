@@ -5,6 +5,7 @@ _: {
       "wheel"
       "trusted"
     ];
+
   };
 
   users.mutableUsers = true;

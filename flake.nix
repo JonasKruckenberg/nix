@@ -43,7 +43,7 @@
       homeManagerConfig = {
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;
-        home-manager.users.jonaskruckenberg = import ./users/jonaskruckenberg;
+        home-manager.users.jonaskruckenberg = import ./home/jonaskruckenberg;
         home-manager.extraSpecialArgs = { inherit inputs; };
       };
     in

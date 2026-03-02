@@ -5,6 +5,8 @@
     inputs.apple-silicon-support.nixosModules.apple-silicon-support
     ../../services/tailscale.nix
     ../../services/grafana.nix
+    ../../services/loki.nix
+    ../../services/alloy.nix
   ];
 
   networking.hostName = "ardmore";

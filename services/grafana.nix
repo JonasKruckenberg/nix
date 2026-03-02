@@ -1,5 +1,7 @@
 { config, ... }:
 {
+  services.caddy.enable = true;
+
   services.caddy.virtualHosts = {
     "https://${config.services.grafana.settings.server.domain}" = {
       extraConfig = ''

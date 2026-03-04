@@ -25,6 +25,8 @@
       url = "github:nix-community/nixos-apple-silicon/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nativelink.url = "github:TraceMachina/nativelink";
   };
 
   outputs =

@@ -8,6 +8,7 @@
     ../../services/prometheus.nix
     ../../services/loki.nix
     ../../services/alloy.nix
+    ../../services/nativelink.nix
   ];
 
   networking.hostName = "ardmore";

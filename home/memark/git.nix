@@ -1,13 +1,13 @@
 _: {
   # tweak this to your liking
 
-  # programs.git = {
-  #   enable = true;
+  programs.git = {
+    enable = true;
   #   settings.user = {
   #     name = "JonasKruckenberg";
   #     email = "iterpre@protonmail.com";
   #   };
-  # };
+  };
 
   # programs.jujutsu = {
   #   enable = true;

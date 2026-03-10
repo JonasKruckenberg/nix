@@ -9,6 +9,11 @@
     shell = pkgs.zsh;
   };
 
+  users.users.memark = {
+    isNormalUser = true;
+    shell = pkgs.zsh;
+  };
+
   programs.zsh.enable = true;
 
   users.mutableUsers = true;

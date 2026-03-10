@@ -44,6 +44,7 @@
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;
         home-manager.users.jonaskruckenberg = import ./home/jonaskruckenberg;
+        home-manager.users.memark = import ./home/memark;
         home-manager.extraSpecialArgs = { inherit inputs; };
       };
     in

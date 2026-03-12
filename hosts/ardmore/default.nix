@@ -16,6 +16,11 @@
   boot.loader.efi.canTouchEfiVariables = false;
   boot.loader.systemd-boot.configurationLimit = 10;
 
+  # allow non-root perf
+  boot.kernel.sysctl."kernel.perf_event_paranoid" = -1;
+  boot.kernel.sysctl."kernel.kptr_restrict" = lib.mkForce 0;
+
+
   hardware.asahi.peripheralFirmwareDirectory = ./firmware;
 
   time.timeZone = "Europe/Berlin";

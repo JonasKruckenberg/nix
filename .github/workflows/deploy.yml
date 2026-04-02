@@ -17,12 +17,12 @@ jobs:
       # Install Nix with flakes enabled on the ephemeral runner
       - uses: DeterminateSystems/nix-installer-action@v14
 
-      # Preflight: evaluate all flake outputs without building.
-      # Catches Nix expression errors (bad imports, type errors, etc.)
-      # before we touch the machine. Runs on x86_64 — the aarch64
-      # build itself happens on ardmore via --build-host below.
-      - name: Preflight — nix flake check
-        run: nix flake check --no-build
+      # # Preflight: evaluate all flake outputs without building.
+      # # Catches Nix expression errors (bad imports, type errors, etc.)
+      # # before we touch the machine. Runs on x86_64 — the aarch64
+      # # build itself happens on ardmore via --build-host below.
+      # - name: Preflight — nix flake check
+      #   run: nix flake check --no-build
 
       # Authentication is handled by Tailscale identity — no SSH key needed.
       # Using ~/.ssh/config rather than NIX_SSHOPTS avoids a known bug

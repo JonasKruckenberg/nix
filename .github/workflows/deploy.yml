@@ -1,8 +1,11 @@
 name: Deploy ardmore
 
+permissions:
+  id-token: write # This is required for the Tailscale action to request a JWT from GitHub
+
 on:
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   deploy:

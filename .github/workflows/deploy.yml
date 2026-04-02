@@ -50,7 +50,12 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:ci
-          ping: ardmore
+
+      - name: manual ping
+        run:
+          tailscale ping --tsmp ardmore
+          tailscale ping --icmp ardmore
+          # ping: ardmore
 
       # Populate known_hosts by scanning ardmore inside the WireGuard tunnel.
       # This is MITM-safe: MagicDNS resolves 'ardmore' via Tailscale's

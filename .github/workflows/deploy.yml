@@ -71,4 +71,4 @@ jobs:
             --target-host deploy@ardmore \
             --build-host deploy@ardmore \
             --max-jobs 2 \
-            --use-remote-sudo
+            --sudo

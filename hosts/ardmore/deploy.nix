@@ -35,6 +35,10 @@
     }
   ];
 
-  # Trust the deploy user in the Nix daemon so it can add paths to the store
-  nix.settings.trusted-users = [ "deploy" ];
+  # Trust the deploy user in the Nix daemon so it can add paths to the store.
+  # Explicitly include root to avoid losing it from the list (NixOS default is ["root"]).
+  nix.settings.trusted-users = [
+    "root"
+    "deploy"
+  ];
 }

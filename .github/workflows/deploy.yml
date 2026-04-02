@@ -19,7 +19,7 @@ jobs:
       # before we touch the machine. Runs on x86_64 — the aarch64
       # build itself happens on ardmore via --build-host below.
       - name: Preflight — nix flake check
-        run: nix flake check --no-build -L
+        run: nix flake check --no-build
 
       # Write the deploy private key and configure SSH.
       # Using ~/.ssh/config rather than NIX_SSHOPTS avoids a known bug
@@ -30,36 +30,42 @@ jobs:
           printf '%s\n' "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           cat >> ~/.ssh/config <<'EOF'
-          Host ardmore
-            User deploy
-            IdentityFile ~/.ssh/id_ed25519
-            StrictHostKeyChecking yes
-            ServerAliveInterval 30
-            ServerAliveCountMax 5
-          EOF
+Host ardmore
+  User deploy
+  IdentityFile ~/.ssh/id_ed25519
+  StrictHostKeyChecking yes
+  ServerAliveInterval 30
+  ServerAliveCountMax 5
+EOF
 
       # Ephemeral Tailscale node for this job.
       # Requires a Tailscale OAuth client with the writable auth_keys scope,
       # owned by tag:ci, with an ACL grant allowing tag:ci → ardmore.
+      # ping: blocks until ardmore is reachable before continuing.
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
+          ping: ardmore
 
       # Must run after Tailscale — ardmore is only reachable via tailnet.
       # For stronger security, store the host key as a secret instead:
       #   echo "${{ secrets.ARDMORE_SSH_HOST_KEY }}" >> ~/.ssh/known_hosts
       - name: Populate known_hosts
-        run: ssh-keyscan ardmore >> ~/.ssh/known_hosts
+        run: ssh-keyscan -t ed25519 ardmore >> ~/.ssh/known_hosts
 
-      # Build the config on ardmore itself (aarch64 — avoids cross-compilation)
-      # and immediately activate it. nixos-rebuild uses --use-remote-sudo to
-      # run the activation script as root via the passwordless-sudo deploy user.
+      # nixos-rebuild is a NixOS-only script, not available on this Ubuntu runner.
+      # We pull it from the same nixpkgs commit pinned in flake.lock via
+      # --inputs-from so the orchestration script is version-consistent with
+      # the system being deployed.
+      # Build and activation both happen on ardmore (aarch64) via --build-host
+      # and --target-host; the runner only evaluates the flake and orchestrates.
       - name: Deploy
         run: |
-          nixos-rebuild switch \
+          nix shell --inputs-from . nixpkgs#nixos-rebuild \
+            --command nixos-rebuild switch \
             --flake .#ardmore \
             --build-host deploy@ardmore \
             --target-host deploy@ardmore \

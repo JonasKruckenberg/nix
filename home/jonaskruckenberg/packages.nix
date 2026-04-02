@@ -4,5 +4,6 @@
     gh
     rustup
     rustPlatform.bindgenHook
+    croc
   ];
 }

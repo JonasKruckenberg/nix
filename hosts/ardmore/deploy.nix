@@ -1,11 +1,5 @@
 { ... }:
 {
-  # SSH daemon — required for nixos-rebuild --target-host
-  services.openssh = {
-    enable = true;
-    settings.PasswordAuthentication = false;
-  };
-
   # Dedicated CI deploy user.
   # Generate a key pair with:
   #   ssh-keygen -t ed25519 -C "github-actions-deploy" -f deploy_key

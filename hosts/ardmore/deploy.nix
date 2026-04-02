@@ -1,18 +1,11 @@
 { ... }:
 {
   # Dedicated CI deploy user.
-  # Generate a key pair with:
-  #   ssh-keygen -t ed25519 -C "github-actions-deploy" -f deploy_key
-  # Then:
-  #   - Add the private key as the DEPLOY_SSH_PRIVATE_KEY GitHub Actions secret
-  #   - Replace the placeholder below with the contents of deploy_key.pub and redeploy manually once
+  # Authentication is handled by Tailscale SSH — no SSH key pair needed.
+  # Access is controlled via the tailnet ACL (see tailscale.nix).
   users.users.deploy = {
     isSystemUser = true;
     group = "deploy";
-    openssh.authorizedKeys.keys = [
-      # REPLACE with your actual public key before first deployment
-      # "ssh-ed25519 AAAA... github-actions-deploy"
-    ];
   };
   users.groups.deploy = { };
 

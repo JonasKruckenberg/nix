@@ -21,18 +21,15 @@ jobs:
       - name: Preflight — nix flake check
         run: nix flake check --no-build
 
-      # Write the deploy private key and configure SSH.
+      # Authentication is handled by Tailscale identity — no SSH key needed.
       # Using ~/.ssh/config rather than NIX_SSHOPTS avoids a known bug
       # where NIX_SSHOPTS is not forwarded to internal nix-build SSH calls.
-      - name: Set up SSH
+      - name: Configure SSH
         run: |
           install -dm 700 ~/.ssh
-          printf '%s\n' "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
           cat >> ~/.ssh/config <<'EOF'
 Host ardmore
   User deploy
-  IdentityFile ~/.ssh/id_ed25519
   StrictHostKeyChecking yes
   ServerAliveInterval 30
   ServerAliveCountMax 5
@@ -40,7 +37,9 @@ EOF
 
       # Ephemeral Tailscale node for this job.
       # Requires a Tailscale OAuth client with the writable auth_keys scope,
-      # owned by tag:ci, with an ACL grant allowing tag:ci → ardmore.
+      # owned by tag:ci. The tailnet ACL must grant tag:ci SSH access to
+      # ardmore as the deploy user:
+      #   "ssh": [{"action":"accept","src":["tag:ci"],"dst":["tag:server"],"users":["deploy"]}]
       # ping: blocks until ardmore is reachable before continuing.
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
@@ -50,10 +49,10 @@ EOF
           tags: tag:ci
           ping: ardmore
 
-      # Verify ardmore's identity against its pre-registered host key.
-      # Obtain the value once from a trusted machine with:
+      # Verify ardmore's identity against its pre-registered Tailscale SSH host key.
+      # Obtain the value once from a machine already on the tailnet:
       #   ssh-keyscan -t ed25519 ardmore
-      # and store the resulting line as the ARDMORE_SSH_HOST_KEY secret.
+      # Store the resulting line as the ARDMORE_SSH_HOST_KEY secret.
       - name: Populate known_hosts
         run: echo "${{ secrets.ARDMORE_SSH_HOST_KEY }}" >> ~/.ssh/known_hosts
 

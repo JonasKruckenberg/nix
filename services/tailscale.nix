@@ -2,7 +2,10 @@
 {
   services.tailscale = {
     enable = true;
-    extraSetFlags = [ "--netfilter-mode=nodivert" ];
+    extraSetFlags = [
+      "--netfilter-mode=nodivert"
+      "--ssh" # enable Tailscale SSH daemon; replaces OpenSSH for remote access
+    ];
   };
   networking.nftables.enable = true;
   networking.firewall = {

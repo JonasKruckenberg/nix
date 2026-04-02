@@ -51,6 +51,9 @@ jobs:
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:ci
 
+      - name: manual status
+        run: tailscale status
+
       - name: manual ping
         run: |
           tailscale ping --tsmp ardmore.tailf383a6.ts.net

@@ -1,22 +1,16 @@
 name: Deploy ardmore
-
 permissions:
   id-token: write # This is required for the Tailscale action to request a JWT from GitHub
-
 on:
   push:
     branches: [main]
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       # Install Nix with flakes enabled on the ephemeral runner
       - uses: DeterminateSystems/nix-installer-action@v14
-
       # # Preflight: evaluate all flake outputs without building.
       # # Catches Nix expression errors (bad imports, type errors, etc.)
       # # before we touch the machine. Runs on x86_64 — the aarch64
@@ -37,7 +31,6 @@ jobs:
             echo '  ServerAliveInterval 30'
             echo '  ServerAliveCountMax 5'
           } >> ~/.ssh/config
-
       # Ephemeral Tailscale node for this job.
       # Requires a Tailscale OAuth client with the writable auth_keys scope,
       # owned by tag:ci. The tailnet ACL must grant tag:ci SSH access to
@@ -50,14 +43,12 @@ jobs:
           authkey: ${{ secrets.TS_AUTH_KEY }}
           statedir: /tmp/tailscale-state/
           ping: ardmore
-
       # Populate known_hosts by scanning ardmore inside the WireGuard tunnel.
       # This is MITM-safe: MagicDNS resolves 'ardmore' via Tailscale's
       # coordination server, which cryptographically binds the name to
       # ardmore's Tailscale identity. No stored secret needed.
       - name: Populate known_hosts
         run: ssh-keyscan -t ed25519 ardmore >> ~/.ssh/known_hosts
-
       # nixos-rebuild is a NixOS-only script, not available on this Ubuntu runner.
       # We pull it from the same nixpkgs commit pinned in flake.lock via
       # --inputs-from so the orchestration script is version-consistent with

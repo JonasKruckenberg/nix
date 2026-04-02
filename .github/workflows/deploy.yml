@@ -27,13 +27,13 @@ jobs:
       - name: Configure SSH
         run: |
           install -dm 700 ~/.ssh
-          cat >> ~/.ssh/config <<'EOF'
-Host ardmore
-  User deploy
-  StrictHostKeyChecking yes
-  ServerAliveInterval 30
-  ServerAliveCountMax 5
-EOF
+          {
+            echo 'Host ardmore'
+            echo '  User deploy'
+            echo '  StrictHostKeyChecking yes'
+            echo '  ServerAliveInterval 30'
+            echo '  ServerAliveCountMax 5'
+          } >> ~/.ssh/config
 
       # Ephemeral Tailscale node for this job.
       # Requires a Tailscale OAuth client with the writable auth_keys scope,

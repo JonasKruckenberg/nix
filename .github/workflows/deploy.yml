@@ -68,7 +68,7 @@ jobs:
         run: |
           nix run nixpkgs#nixos-rebuild -- switch \
             --flake .#ardmore \
-            --target-host root@ardmore \
-            --build-host root@ardmore \
+            --target-host deploy@ardmore \
+            --build-host deploy@ardmore \
             --max-jobs 2
         # --use-remote-sudo

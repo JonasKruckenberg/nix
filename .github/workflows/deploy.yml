@@ -52,10 +52,9 @@ jobs:
           tags: tag:ci
 
       - name: manual ping
-        run:
+        run: |
           tailscale ping --tsmp ardmore
           tailscale ping --icmp ardmore
-          # ping: ardmore
 
       # Populate known_hosts by scanning ardmore inside the WireGuard tunnel.
       # This is MITM-safe: MagicDNS resolves 'ardmore' via Tailscale's

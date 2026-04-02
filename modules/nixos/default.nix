@@ -14,6 +14,11 @@
     shell = pkgs.zsh;
   };
 
+  users.users.daxhuiberts = {
+    isNormalUser = true;
+    shell = pkgs.zsh;
+  };
+
   programs.zsh.enable = true;
 
   users.mutableUsers = true;

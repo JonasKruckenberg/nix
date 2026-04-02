@@ -53,15 +53,15 @@ jobs:
 
       - name: manual ping
         run: |
-          tailscale ping --tsmp ardmore
-          tailscale ping --icmp ardmore
+          tailscale ping --tsmp ardmore.tailf383a6.ts.net
+          tailscale ping --icmp ardmore.tailf383a6.ts.net
 
       # Populate known_hosts by scanning ardmore inside the WireGuard tunnel.
       # This is MITM-safe: MagicDNS resolves 'ardmore' via Tailscale's
       # coordination server, which cryptographically binds the name to
       # ardmore's Tailscale identity. No stored secret needed.
       - name: Populate known_hosts
-        run: ssh-keyscan -t ed25519 ardmore >> ~/.ssh/known_hosts
+        run: ssh-keyscan -t ed25519 ardmore.tailf383a6.ts.net >> ~/.ssh/known_hosts
 
       # nixos-rebuild is a NixOS-only script, not available on this Ubuntu runner.
       # We pull it from the same nixpkgs commit pinned in flake.lock via
@@ -74,6 +74,6 @@ jobs:
           nix shell --inputs-from . nixpkgs#nixos-rebuild \
             --command nixos-rebuild switch \
             --flake .#ardmore \
-            --build-host deploy@ardmore \
-            --target-host deploy@ardmore \
+            --build-host deploy@ardmore.tailf383a6.ts.net \
+            --target-host deploy@ardmore.tailf383a6.ts.net \
             --use-remote-sudo

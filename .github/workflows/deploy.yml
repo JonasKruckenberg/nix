@@ -49,12 +49,12 @@ EOF
           tags: tag:ci
           ping: ardmore
 
-      # Verify ardmore's identity against its pre-registered Tailscale SSH host key.
-      # Obtain the value once from a machine already on the tailnet:
-      #   ssh-keyscan -t ed25519 ardmore
-      # Store the resulting line as the ARDMORE_SSH_HOST_KEY secret.
+      # Populate known_hosts by scanning ardmore inside the WireGuard tunnel.
+      # This is MITM-safe: MagicDNS resolves 'ardmore' via Tailscale's
+      # coordination server, which cryptographically binds the name to
+      # ardmore's Tailscale identity. No stored secret needed.
       - name: Populate known_hosts
-        run: echo "${{ secrets.ARDMORE_SSH_HOST_KEY }}" >> ~/.ssh/known_hosts
+        run: ssh-keyscan -t ed25519 ardmore >> ~/.ssh/known_hosts
 
       # nixos-rebuild is a NixOS-only script, not available on this Ubuntu runner.
       # We pull it from the same nixpkgs commit pinned in flake.lock via

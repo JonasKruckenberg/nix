@@ -1,11 +1,10 @@
-{ ... }:
+{ pkgs, ... }:
 {
   # Dedicated CI deploy user.
-  # Authentication is handled by Tailscale SSH — no SSH key pair needed.
-  # Access is controlled via the tailnet ACL (see tailscale.nix).
   users.users.deploy = {
     isSystemUser = true;
     group = "deploy";
+    shell = pkgs.zsh;
   };
   users.groups.deploy = { };
 

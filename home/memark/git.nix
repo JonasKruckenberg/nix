@@ -3,10 +3,10 @@ _: {
 
   programs.git = {
     enable = true;
-  #   settings.user = {
-  #     name = "JonasKruckenberg";
-  #     email = "iterpre@protonmail.com";
-  #   };
+    #   settings.user = {
+    #     name = "JonasKruckenberg";
+    #     email = "iterpre@protonmail.com";
+    #   };
   };
 
   # programs.jujutsu = {

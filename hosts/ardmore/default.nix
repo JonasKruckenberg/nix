@@ -2,6 +2,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./deploy.nix
     inputs.apple-silicon-support.nixosModules.apple-silicon-support
     ../../services/tailscale.nix
     ../../services/grafana.nix

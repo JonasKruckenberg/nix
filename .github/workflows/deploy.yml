@@ -1,0 +1,66 @@
+name: Deploy ardmore
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install Nix with flakes enabled on the ephemeral runner
+      - uses: DeterminateSystems/nix-installer-action@v14
+
+      # Preflight: evaluate all flake outputs without building.
+      # Catches Nix expression errors (bad imports, type errors, etc.)
+      # before we touch the machine. Runs on x86_64 — the aarch64
+      # build itself happens on ardmore via --build-host below.
+      - name: Preflight — nix flake check
+        run: nix flake check --no-build -L
+
+      # Write the deploy private key and configure SSH.
+      # Using ~/.ssh/config rather than NIX_SSHOPTS avoids a known bug
+      # where NIX_SSHOPTS is not forwarded to internal nix-build SSH calls.
+      - name: Set up SSH
+        run: |
+          install -dm 700 ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          cat >> ~/.ssh/config <<'EOF'
+          Host ardmore
+            User deploy
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking yes
+            ServerAliveInterval 30
+            ServerAliveCountMax 5
+          EOF
+
+      # Ephemeral Tailscale node for this job.
+      # Requires a Tailscale OAuth client with the writable auth_keys scope,
+      # owned by tag:ci, with an ACL grant allowing tag:ci → ardmore.
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      # Must run after Tailscale — ardmore is only reachable via tailnet.
+      # For stronger security, store the host key as a secret instead:
+      #   echo "${{ secrets.ARDMORE_SSH_HOST_KEY }}" >> ~/.ssh/known_hosts
+      - name: Populate known_hosts
+        run: ssh-keyscan ardmore >> ~/.ssh/known_hosts
+
+      # Build the config on ardmore itself (aarch64 — avoids cross-compilation)
+      # and immediately activate it. nixos-rebuild uses --use-remote-sudo to
+      # run the activation script as root via the passwordless-sudo deploy user.
+      - name: Deploy
+        run: |
+          nixos-rebuild switch \
+            --flake .#ardmore \
+            --build-host deploy@ardmore \
+            --target-host deploy@ardmore \
+            --use-remote-sudo

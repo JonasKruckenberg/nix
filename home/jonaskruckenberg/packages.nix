@@ -5,5 +5,6 @@
     rustup
     rustPlatform.bindgenHook
     croc
+    claude-code
   ];
 }

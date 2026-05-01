@@ -1,9 +1,4 @@
-{
-  inputs,
-  lib,
-  pkgs,
-  ...
-}:
+{ inputs, lib, ... }:
 {
   imports = [
     ./hardware-configuration.nix
@@ -21,8 +16,6 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = false;
   boot.loader.systemd-boot.configurationLimit = 10;
-
-  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # allow non-root perf
   boot.kernel.sysctl."kernel.perf_event_paranoid" = -1;

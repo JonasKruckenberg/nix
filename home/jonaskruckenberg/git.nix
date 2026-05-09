@@ -7,6 +7,11 @@ _: {
     };
   };
 
+  programs.gh = {
+    enable = true;
+    gitCredentialHelper.enable = true;
+  };
+
   programs.jujutsu = {
     enable = true;
     settings = {

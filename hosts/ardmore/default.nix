@@ -9,6 +9,9 @@
     ../../services/prometheus.nix
     ../../services/loki.nix
     ../../services/alloy.nix
+    ../../services/tsnsrv.nix
+    ../../services/spindle.nix
+    ../../services/attic.nix
   ];
 
   networking.hostName = "ardmore";

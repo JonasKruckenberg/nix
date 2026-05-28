@@ -25,6 +25,21 @@
       url = "github:nix-community/nixos-apple-silicon/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    tangled = {
+      url = "git+https://tangled.org/tangled.org/core?ref=refs/tags/v1.14.1-alpha";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    attic = {
+      url = "github:zhaofengli/attic";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    tsnsrv = {
+      url = "github:boinkor-net/tsnsrv";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =

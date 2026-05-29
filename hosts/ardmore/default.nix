@@ -12,9 +12,16 @@
     ../../services/tsnsrv.nix
     ../../services/spindle.nix
     ../../services/attic.nix
+    inputs.agenix.nixosModules.default
   ];
 
   networking.hostName = "ardmore";
+
+  # ardmore uses Tailscale SSH (openssh is disabled), so agenix's default
+  # identity (services.openssh.hostKeys) is empty. Point it at the ed25519
+  # host key generated once by hand at /etc/ssh/ssh_host_ed25519_key, whose
+  # public half is the `ardmore` recipient in secrets/secrets.nix.
+  age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = false;

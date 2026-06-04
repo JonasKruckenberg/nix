@@ -1,0 +1,50 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  fmt:
+    # The flake only declares aarch64 systems, so `nix fmt` must run on an
+    # aarch64 runner (otherwise there is no formatter.x86_64-linux output).
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/determinate-nix-action@v3
+      - uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 5G
+          purge: true
+          purge-prefixes: nix-${{ runner.os }}-
+          purge-last-accessed: P7D
+      - run: nix fmt -- --ci
+  build-ardmore:
+    runs-on: ubuntu-24.04-arm
+    # ardmore is an Apple Silicon (Asahi) host, so its toplevel pulls in a
+    # from-source linux-asahi kernel + u-boot that aren't on cache.nixos.org.
+    # Without the substituter below the runner compiles the kernel from scratch
+    # (30+ min, looks like it's "stuck" on the final activate/toplevel build).
+    # Fail fast instead of hanging for the 6h default if the cache ever misses.
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/determinate-nix-action@v3
+        with:
+          extra-conf: |
+            extra-substituters = https://nixos-apple-silicon.cachix.org
+            extra-trusted-public-keys = nixos-apple-silicon.cachix.org-1:8psDu5SA5dAD7qA0zMy5UT292TxeEPzIz8VVEr2Js20=
+      - uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 5G
+          purge: true
+          purge-prefixes: nix-${{ runner.os }}-
+          purge-last-accessed: P7D
+      - run: nix flake check --no-build
+      - run: nix build --no-link --print-out-paths .#nixosConfigurations.ardmore.config.system.build.toplevel

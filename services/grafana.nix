@@ -19,6 +19,13 @@ _: {
   services.grafana = {
     enable = true;
     settings = {
+      security = {
+        # 26.05 dropped the built-in default for `secret_key`. This is the
+        # historical upstream default, so hard-coding it keeps any existing
+        # DB secrets decryptable. It is not actually sensitive (it was the
+        # public nixpkgs default for years).
+        secret_key = "SW2YcwTIb9zpOOhoPsMm";
+      };
       "auth.proxy" = {
         # Enable proxy-based authentication
         enabled = true;

@@ -2,15 +2,15 @@
   description = "Jonas' multi-host Nix configuration";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     nix-darwin = {
-      url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
+      url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.11";
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -40,12 +40,16 @@
         ./modules/common
       ];
 
-      homeManagerConfig = {
+      homeUsers = {
+        jonaskruckenberg = import ./home/jonaskruckenberg;
+        memark = import ./home/memark;
+        daxhuiberts = import ./home/daxhuiberts;
+      };
+
+      mkHomeManagerConfig = users: {
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;
-        home-manager.users.jonaskruckenberg = import ./home/jonaskruckenberg;
-        home-manager.users.memark = import ./home/memark;
-        home-manager.users.daxhuiberts = import ./home/daxhuiberts;
+        home-manager.users = users;
         home-manager.extraSpecialArgs = { inherit inputs; };
       };
     in
@@ -94,7 +98,7 @@
             ./modules/nixos
             ./hosts/ardmore
             home-manager.nixosModules.home-manager
-            homeManagerConfig
+            (mkHomeManagerConfig homeUsers)
           ];
         };
 
@@ -105,7 +109,7 @@
             ./modules/darwin
             ./hosts/goldwater
             home-manager.darwinModules.home-manager
-            homeManagerConfig
+            (mkHomeManagerConfig { inherit (homeUsers) jonaskruckenberg; })
           ];
         };
 

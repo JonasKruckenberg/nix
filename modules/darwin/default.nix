@@ -8,6 +8,7 @@
   users.users.jonaskruckenberg = {
     shell = pkgs.zsh;
     uid = 1001;
+    home = "/Users/jonaskruckenberg";
   };
   system.primaryUser = "jonaskruckenberg";
 }

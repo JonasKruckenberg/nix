@@ -16,6 +16,9 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = false;
   boot.loader.systemd-boot.configurationLimit = 10;
+  # Apple Silicon has read-only EFI vars, and systemd >=257 ignores `--no-variables`
+  # in `bootctl update`, so it fails fatally. `--graceful` makes that write non-fatal.
+  boot.loader.systemd-boot.graceful = true;
 
   # allow non-root perf
   boot.kernel.sysctl."kernel.perf_event_paranoid" = -1;

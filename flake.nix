@@ -25,6 +25,11 @@
       url = "github:nix-community/nixos-apple-silicon/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    bulletin = {
+      url = "github:JonasKruckenberg/bulletin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =

@@ -22,6 +22,27 @@
         "type": "github"
       }
     },
+    "bulletin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "rust-overlay": "rust-overlay"
+      },
+      "locked": {
+        "lastModified": 1781193600,
+        "narHash": "sha256-tRbJdpFekJg/ormVOuKcUrdigB1FmieZ3mnG1k+UlDc=",
+        "owner": "JonasKruckenberg",
+        "repo": "bulletin",
+        "rev": "02e1e57874e6eff44b5ddac0350c3031c29358fc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "JonasKruckenberg",
+        "repo": "bulletin",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "locked": {
         "lastModified": 1761640442,
@@ -131,11 +152,33 @@
     "root": {
       "inputs": {
         "apple-silicon-support": "apple-silicon-support",
+        "bulletin": "bulletin",
         "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs",
         "treefmt-nix": "treefmt-nix"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "bulletin",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1780975129,
+        "narHash": "sha256-428T1pLXnbVeUgZx2wWEkbvl3ZORjras34ANZ3ACp5A=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "fe64e6b409dc513274d2941f8da13bbd0fdcf44e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     },
     "treefmt-nix": {

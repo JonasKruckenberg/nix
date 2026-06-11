@@ -10,6 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@v3
+        with:
+          extra-conf: |
+            # PAT (repo contents:read) so the runner can fetch the private bulletin
+            # flake input while evaluating .#ardmore (build itself runs on ardmore).
+            access-tokens = github.com=${{ secrets.BULLETIN_TOKEN }}
       - uses: nix-community/cache-nix-action@v7
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}

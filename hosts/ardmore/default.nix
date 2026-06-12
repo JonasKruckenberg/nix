@@ -4,6 +4,7 @@
     ./hardware-configuration.nix
     ./deploy.nix
     inputs.apple-silicon-support.nixosModules.apple-silicon-support
+    inputs.agenix.nixosModules.default
     ../../services/tailscale.nix
     ../../services/grafana.nix
     ../../services/prometheus.nix
@@ -13,6 +14,11 @@
   ];
 
   networking.hostName = "ardmore";
+
+  # agenix decryption identity. This host uses Tailscale SSH with OpenSSH disabled, so agenix
+  # can't auto-derive an identity from services.openssh.hostKeys — point it at a dedicated
+  # ed25519 key generated once on the box (see secrets/secrets.nix for the matching recipient).
+  age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = false;

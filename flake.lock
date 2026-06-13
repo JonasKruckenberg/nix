@@ -47,22 +47,38 @@
     },
     "bulletin": {
       "inputs": {
+        "crane": "crane",
         "nixpkgs": [
           "nixpkgs"
         ],
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1781254357,
-        "narHash": "sha256-uS6BG4yq64m4mVs3nsnIb+jaLt8SDBp8BUdwjiwqGSg=",
+        "lastModified": 1781382460,
+        "narHash": "sha256-hcwsk2LPbHVhKNCG9TDvHK+xcKtYMOw6ExfOcqM8Ass=",
         "owner": "JonasKruckenberg",
         "repo": "bulletin",
-        "rev": "1dbe892991d921c9e77d0a24eab37b9aa8eb7cea",
+        "rev": "e122a2107a92b168c16f448eab69a55e450ab2a4",
         "type": "github"
       },
       "original": {
         "owner": "JonasKruckenberg",
         "repo": "bulletin",
+        "type": "github"
+      }
+    },
+    "crane": {
+      "locked": {
+        "lastModified": 1771438068,
+        "narHash": "sha256-nGBbXvEZVe/egCPVPFcu89RFtd8Rf6J+4RFoVCFec0A=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "b5090e53e9d68c523a4bb9ad42b4737ee6747597",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
         "type": "github"
       }
     },

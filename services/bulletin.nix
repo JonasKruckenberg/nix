@@ -1,4 +1,10 @@
-{ config, inputs, ... }:
+{
+  config,
+  inputs,
+  pkgs,
+  lib,
+  ...
+}:
 {
   imports = [ inputs.bulletin.nixosModules.bulletin ];
 
@@ -32,15 +38,6 @@
       # `wants` it, so a sidecar that's down or slow never blocks the service.
       serveLocally = true;
 
-      # Defaults left in place: model = "qwen3.5-4b-instruct" (~2.5 GB Q4_K_M, comfortable in ardmore's
-      # 16 GiB), baseUrl = "http://127.0.0.1:8080/v1", promptVersion = 2.
-      #
-      # CPU-only for now: leaving `package` at the default `pkgs.llama-cpp` keeps the Asahi Vulkan
-      # plumbing (ICD visibility, MESA_SHADER_CACHE_DIR, MemoryDenyWriteExecute) out of the picture.
-      # Summarization is off the hot path, so ~8 tok/s on CPU is fine. To move to GPU later, set
-      #   package = pkgs.llama-cpp.override { vulkanSupport = true; };
-      # plus the shader-cache env — same GGUF and model name, so no re-fetch or re-summarization.
-
       # The GGUF is fetched + sha256-verified into /var/lib/bulletin-models on activation (declarative
       # reference; the multi-GB blob stays out of the Nix store and binary cache). To fill these in:
       #   - modelUrl:    a Q4_K_M GGUF, e.g. https://huggingface.co/<repo>/resolve/main/<file>-Q4_K_M.gguf
@@ -48,13 +45,14 @@
       #                  `curl -sL https://huggingface.co/<repo>/raw/main/<file>-Q4_K_M.gguf`
       modelUrl = "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf";
       modelSha256 = "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4";
+      model = "Qwen3.5-4B-Q4_K_M.gguf";
 
       # GPU (Asahi Vulkan) path — uncomment to move the sidecar off CPU; same GGUF and model name, so
       # no re-fetch or re-summarization. Also add `pkgs` (and `lib`, for the unit override below) to the
       # module arguments at the top of this file. Pair with the llama-cpp unit override below (shader
       # cache, plus MemoryDenyWriteExecute if needed), and confirm the host has hardware.graphics + the
       # mesa-asahi-edge Vulkan ICD (from apple-silicon-support) enabled.
-      # package = pkgs.llama-cpp.override { vulkanSupport = true; };
+      package = pkgs.llama-cpp.override { vulkanSupport = true; };
     };
   };
 
@@ -64,10 +62,10 @@
   # point MESA_SHADER_CACHE_DIR at the unit's writable CacheDirectory (/var/cache/llama-cpp). If the
   # sidecar then dies on an mmap/EPERM at startup, Mesa's shader JIT is tripping MemoryDenyWriteExecute —
   # relax it too (the second line).
-  # systemd.services.llama-cpp = {
-  #   environment.MESA_SHADER_CACHE_DIR = "/var/cache/llama-cpp";
-  #   serviceConfig.MemoryDenyWriteExecute = lib.mkForce false;
-  # };
+  systemd.services.llama-cpp = {
+    environment.MESA_SHADER_CACHE_DIR = "/var/cache/llama-cpp";
+    serviceConfig.MemoryDenyWriteExecute = lib.mkForce false;
+  };
 
   # Scrape Bulletin's exporter alongside the node exporter (see services/prometheus.nix).
   services.prometheus.scrapeConfigs = [

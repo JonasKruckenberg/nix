@@ -5,5 +5,6 @@
     rustPlatform.bindgenHook
     croc
     claude-code
+    fastfetch
   ];
 }

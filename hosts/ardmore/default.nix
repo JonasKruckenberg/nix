@@ -33,6 +33,13 @@
 
   hardware.asahi.peripheralFirmwareDirectory = ./firmware;
 
+  # Build /run/opengl-driver from the asahi-overlaid Mesa so the GPU stack — and crucially the Mesa
+  # Asahi (honeykrisp) Vulkan ICD — exists on the box. apple-silicon-support only sets
+  # hardware.graphics.package; it never flips `.enable`, so without this the Vulkan loader finds no
+  # ICD and the llama-cpp sidecar (services/bulletin.nix) can't initialize Vulkan. The NixOS-patched
+  # vulkan-loader then auto-discovers the ICD under /run/opengl-driver/share/vulkan/icd.d.
+  hardware.graphics.enable = true;
+
   time.timeZone = "Europe/Berlin";
 
   i18n.defaultLocale = "en_US.UTF-8";

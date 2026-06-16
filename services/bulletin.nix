@@ -47,24 +47,37 @@
       modelSha256 = "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4";
       model = "Qwen3.5-4B-Q4_K_M.gguf";
 
-      # GPU (Asahi Vulkan) path — uncomment to move the sidecar off CPU; same GGUF and model name, so
-      # no re-fetch or re-summarization. Also add `pkgs` (and `lib`, for the unit override below) to the
-      # module arguments at the top of this file. Pair with the llama-cpp unit override below (shader
-      # cache, plus MemoryDenyWriteExecute if needed), and confirm the host has hardware.graphics + the
-      # mesa-asahi-edge Vulkan ICD (from apple-silicon-support) enabled.
+      # GPU (Asahi Vulkan) path: run the sidecar on the GPU instead of CPU — same GGUF and model name, so
+      # no re-fetch or re-summarization. Requires hardware.graphics.enable on the host (set in
+      # hosts/ardmore, which exposes the mesa-asahi-edge Vulkan ICD via apple-silicon-support) plus the
+      # llama-cpp unit override below (device groups, shader cache, W^X). Verify it actually initializes
+      # Vulkan on the box — llama.cpp on Asahi/honeykrisp is recent and not always smooth.
       package = pkgs.llama-cpp.override { vulkanSupport = true; };
     };
   };
 
-  # GPU (Asahi Vulkan) sidecar plumbing — uncomment together with `llm.package` above (and add `lib` +
-  # `pkgs` to the module arguments). The nixpkgs services.llama-cpp unit runs under ProtectHome +
-  # ProtectSystem = "strict" with only LLAMA_CACHE set, so Mesa has nowhere to cache compiled shaders;
-  # point MESA_SHADER_CACHE_DIR at the unit's writable CacheDirectory (/var/cache/llama-cpp). If the
-  # sidecar then dies on an mmap/EPERM at startup, Mesa's shader JIT is tripping MemoryDenyWriteExecute —
-  # relax it too (the second line).
+  # GPU (Asahi Vulkan) sidecar plumbing for the nixpkgs services.llama-cpp unit. Upstream already sets
+  # PrivateDevices = false (so /dev/dri is visible) and CacheDirectory = llama-cpp, but it runs under
+  # ProtectSystem = "strict" + DynamicUser, leaving three Vulkan-specific gaps to close here:
+  #
+  #   1. Device permission — a DynamicUser belongs to no groups, so it can't open the DRI nodes even
+  #      though they're visible. Add `render` (renderD*) and `video` (card*). Needs hardware.graphics
+  #      on the host (hosts/ardmore) so the nodes and the Mesa Asahi ICD exist; the NixOS-patched
+  #      vulkan-loader auto-discovers the ICD under /run/opengl-driver, which stays readable through
+  #      ProtectSystem = "strict". (If discovery ever fails, set VK_DRIVER_FILES in environment below.)
+  #   2. Shader cache — only LLAMA_CACHE is set upstream, so Mesa has nowhere to cache compiled shaders.
+  #      Point MESA_SHADER_CACHE_DIR at the unit's writable CacheDirectory (/var/cache/llama-cpp).
+  #   3. W^X — Mesa's shader JIT needs writable-then-executable pages, which upstream's
+  #      MemoryDenyWriteExecute = true forbids (the sidecar dies on an mmap/EPERM at startup); relax it.
   systemd.services.llama-cpp = {
     environment.MESA_SHADER_CACHE_DIR = "/var/cache/llama-cpp";
-    serviceConfig.MemoryDenyWriteExecute = lib.mkForce false;
+    serviceConfig = {
+      SupplementaryGroups = [
+        "render"
+        "video"
+      ];
+      MemoryDenyWriteExecute = lib.mkForce false;
+    };
   };
 
   # Scrape Bulletin's exporter alongside the node exporter (see services/prometheus.nix).

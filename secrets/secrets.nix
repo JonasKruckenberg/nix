@@ -10,4 +10,9 @@ in
     jonas
     ardmore
   ];
+
+  "bulletin-api-admin-key.age".publicKeys = [
+    jonas
+    ardmore
+  ];
 }

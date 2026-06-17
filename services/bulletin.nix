@@ -14,6 +14,13 @@
   # an env file (KEY=value per line); see secrets/secrets.nix for the recipient keys.
   age.secrets.bulletin-smtp.file = ../secrets/bulletin-smtp.age;
 
+  age.secrets."bulletin-api-admin-key" = {
+    file = ../secrets/bulletin-api-admin-key.age;
+    owner = "bulletin";
+    group = "bulletin";
+    mode = "0440";
+  };
+
   services.bulletin = {
     enable = true;
     # Health on 127.0.0.1:3000, Prometheus on 127.0.0.1:9464, JSON logs to journald

@@ -28,6 +28,8 @@
     # (owner/mode set on the secret above); the module reads it at runtime, never the store.
     api.adminKeyFile = config.age.secrets."bulletin-api-admin-key".path;
 
+    github.secretFile = config.age.secrets."bulletin-github".path;
+
     # Health on 127.0.0.1:3000, Prometheus on 127.0.0.1:9464, JSON logs to journald
     # (picked up by Alloy → Loki). Email goes out over Proton SMTP.
     email = {

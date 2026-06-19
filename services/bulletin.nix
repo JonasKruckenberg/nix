@@ -21,12 +21,21 @@
     mode = "0440";
   };
 
+  age.secrets."bulletin-github" = {
+    file = ../secrets/bulletin-github.age;
+    owner = "bulletin";
+    group = "bulletin";
+    mode = "0440";
+  };
+
   services.bulletin = {
     enable = true;
 
     # Admin API auth key, decrypted by agenix into a bulletin-readable file under /run/agenix
     # (owner/mode set on the secret above); the module reads it at runtime, never the store.
     api.adminKeyFile = config.age.secrets."bulletin-api-admin-key".path;
+
+    github.secretFile = config.age.secrets."bulletin-github".path;
 
     # Health on 127.0.0.1:3000, Prometheus on 127.0.0.1:9464, JSON logs to journald
     # (picked up by Alloy → Loki). Email goes out over Proton SMTP.

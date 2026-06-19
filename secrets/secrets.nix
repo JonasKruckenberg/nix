@@ -15,4 +15,9 @@ in
     jonas
     ardmore
   ];
+
+  "bulletin-github.age".publicKeys = [
+    jonas
+    ardmore
+  ];
 }

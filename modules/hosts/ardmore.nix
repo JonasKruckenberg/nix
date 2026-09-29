@@ -1,15 +1,26 @@
 { inputs, config, ... }:
+let
+  inherit (config.flake) modules;
+in
 {
   # Asahi Mac mini, headless server. Pulls and applies main on a timer (system.autoUpgrade below).
   flake.nixosConfigurations.ardmore = inputs.nixpkgs.lib.nixosSystem {
-    modules = [ config.flake.modules.nixos.ardmore ];
+    modules = [ modules.nixos.ardmore ];
   };
 
   flake.modules.nixos.ardmore =
-    { lib, modulesPath, ... }:
+    {
+      config,
+      lib,
+      modulesPath,
+      ...
+    }:
+    let
+      firmwareFound = config.hardware.asahi.peripheralFirmwareDirectory != null;
+    in
     {
       imports =
-        (with config.flake.modules.nixos; [
+        (with modules.nixos; [
           base
           jonas
           memark
@@ -44,8 +55,11 @@
           "dmask=0022"
         ];
       };
-      # Apple peripheral firmware, pinned via the private ardmore-firmware input (see flake.nix).
-      hardware.asahi.peripheralFirmwareDirectory = "${inputs.ardmore-firmware}/hosts/ardmore/firmware";
+      # Apple's peripheral firmware is not redistributable, so it is not in this repo. The Asahi
+      # module's default finds it on the machine's own ESP (/boot/asahi), which needs an impure
+      # evaluation; pure builds elsewhere (CI) find nothing and produce a system without it.
+      hardware.asahi.extractPeripheralFirmware = firmwareFound;
+      warnings = lib.optional (!firmwareFound) "ardmore: Asahi firmware not found; on the device, build with --impure";
 
       boot.loader.systemd-boot.enable = true;
       boot.loader.systemd-boot.configurationLimit = 10;
@@ -69,6 +83,7 @@
       system.autoUpgrade = {
         enable = true;
         flake = "github:JonasKruckenberg/nix#ardmore";
+        flags = [ "--impure" ]; # firmware from the ESP, see hardware.asahi above
         dates = "hourly";
       };
     };

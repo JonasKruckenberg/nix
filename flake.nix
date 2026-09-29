@@ -27,16 +27,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    bulletin = {
-      url = "github:JonasKruckenberg/bulletin";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    agenix = {
-      url = "github:ryantm/agenix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Apple peripheral firmware for ardmore (all_firmware.tar.gz + kernelcache), extracted from the
     # machine's EFI partition by the Asahi installer. Apple's blobs are not redistributable, so they
     # live in a private repo; this lock pins their revision and content hash, the bytes stay out of

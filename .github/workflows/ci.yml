@@ -12,31 +12,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # One runner per system in the flake. `nix flake check` builds every configuration
-        # for the runner's own system (see modules/ci.nix) plus the treefmt check.
-        runner: [ubuntu-24.04-arm, macos-15]
+        include:
+          # Every configuration is a check on its own system (modules/ci.nix). The darwin
+          # runner builds its hosts outright; they are small and fully cached.
+          - runner: macos-15
+            args: ""
+          # ardmore's toplevel needs the Asahi kernel, which no binary cache carries for this
+          # nixpkgs pin, so the Linux runner only evaluates. ardmore builds it itself on pull
+          # and keeps the old generation if that fails.
+          - runner: ubuntu-24.04-arm
+            args: --no-build
     runs-on: ${{ matrix.runner }}
-    # ardmore's toplevel pulls in a from-source linux-asahi kernel; the cachix substituter below
-    # keeps that off the runner. Fail fast if the cache ever misses instead of hanging for hours.
-    timeout-minutes: 60
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@v3
         with:
           extra-conf: |
-            extra-substituters = https://nixos-apple-silicon.cachix.org
-            extra-trusted-public-keys = nixos-apple-silicon.cachix.org-1:8psDu5SA5dAD7qA0zMy5UT292TxeEPzIz8VVEr2Js20=
             # Runner IPs share GitHub's anonymous API rate limit; authenticate flake-input fetches.
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-      - uses: nix-community/cache-nix-action@v7
-        if: runner.os == 'Linux'
-        with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
-          gc-max-store-size-linux: 5G
-          purge: true
-          purge-prefixes: nix-${{ runner.os }}-
-          purge-last-accessed: P7D
-      # TEMPORARY: surface the lock entry for the new import-tree input (no nix in the authoring env).
-      - run: nix flake lock && git diff -- flake.lock
-      - run: nix flake check -L
+      - run: nix flake check -L ${{ matrix.args }}

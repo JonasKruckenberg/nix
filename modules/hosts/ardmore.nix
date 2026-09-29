@@ -50,8 +50,8 @@
           "dmask=0022"
         ];
       };
-      # Apple peripheral firmware, extracted from this machine's EFI partition by the Asahi installer.
-      hardware.asahi.peripheralFirmwareDirectory = ../../hosts/ardmore/firmware;
+      # Apple peripheral firmware, pinned via the private ardmore-firmware input (see flake.nix).
+      hardware.asahi.peripheralFirmwareDirectory = inputs.ardmore-firmware;
       # Exposes the Mesa Asahi Vulkan ICD under /run/opengl-driver for the llama.cpp sidecar.
       hardware.graphics.enable = true;
 

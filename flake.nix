@@ -36,6 +36,15 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Apple peripheral firmware for ardmore (all_firmware.tar.gz + kernelcache), extracted from the
+    # machine's EFI partition by the Asahi installer. Apple's blobs are not redistributable, so they
+    # live in a private repo; this lock pins their revision and content hash, the bytes stay out of
+    # this public tree. Not LFS: `github:` inputs are fetched as tarballs, which omit LFS content.
+    ardmore-firmware = {
+      url = "github:JonasKruckenberg/ardmore-firmware";
+      flake = false;
+    };
   };
 
   # Dendritic layout: every file under ./modules is a flake-parts module. Features publish

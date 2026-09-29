@@ -3,38 +3,22 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  fmt:
-    # The flake only declares aarch64 systems, so `nix fmt` must run on an
-    # aarch64 runner (otherwise there is no formatter.x86_64-linux output).
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v4
-      - uses: DeterminateSystems/determinate-nix-action@v3
-        with:
-          extra-conf: |
-            # PAT (repo contents:read) so Nix can fetch the private bulletin flake input.
-            access-tokens = github.com=${{ secrets.BULLETIN_TOKEN }}
-      - uses: nix-community/cache-nix-action@v7
-        with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
-          gc-max-store-size-linux: 5G
-          purge: true
-          purge-prefixes: nix-${{ runner.os }}-
-          purge-last-accessed: P7D
-      - run: nix fmt -- --ci
-  build-ardmore:
-    runs-on: ubuntu-24.04-arm
-    # ardmore is an Apple Silicon (Asahi) host, so its toplevel pulls in a
-    # from-source linux-asahi kernel + u-boot that aren't on cache.nixos.org.
-    # Without the substituter below the runner compiles the kernel from scratch
-    # (30+ min, looks like it's "stuck" on the final activate/toplevel build).
-    # Fail fast instead of hanging for the 6h default if the cache ever misses.
-    timeout-minutes: 45
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        # One runner per system in the flake. `nix flake check` builds every configuration
+        # for the runner's own system (see modules/ci.nix) plus the treefmt check.
+        runner: [ubuntu-24.04-arm, macos-15]
+    runs-on: ${{ matrix.runner }}
+    # ardmore's toplevel pulls in a from-source linux-asahi kernel; the cachix substituter below
+    # keeps that off the runner. Fail fast if the cache ever misses instead of hanging for hours.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@v3
@@ -45,6 +29,7 @@ jobs:
             # PAT (repo contents:read) so Nix can fetch the private bulletin flake input.
             access-tokens = github.com=${{ secrets.BULLETIN_TOKEN }}
       - uses: nix-community/cache-nix-action@v7
+        if: runner.os == 'Linux'
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
@@ -52,5 +37,6 @@ jobs:
           purge: true
           purge-prefixes: nix-${{ runner.os }}-
           purge-last-accessed: P7D
-      - run: nix flake check --no-build
-      - run: nix build --no-link --print-out-paths .#nixosConfigurations.ardmore.config.system.build.toplevel
+      # TEMPORARY: surface the lock entry for the new import-tree input (no nix in the authoring env).
+      - run: nix flake lock && git diff -- flake.lock
+      - run: nix flake check -L

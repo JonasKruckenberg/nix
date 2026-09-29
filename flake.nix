@@ -15,6 +15,7 @@
     };
 
     flake-parts.url = "github:hercules-ci/flake-parts";
+    import-tree.url = "github:denful/import-tree";
 
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
@@ -37,100 +38,8 @@
     };
   };
 
-  outputs =
-    inputs@{
-      flake-parts,
-      nixpkgs,
-      nix-darwin,
-      home-manager,
-      ...
-    }:
-    let
-      commonModules = [
-        ./modules/common
-      ];
-
-      homeUsers = {
-        jonaskruckenberg = import ./home/jonaskruckenberg;
-        memark = import ./home/memark;
-        daxhuiberts = import ./home/daxhuiberts;
-      };
-
-      mkHomeManagerConfig = users: {
-        home-manager.useGlobalPkgs = true;
-        home-manager.useUserPackages = true;
-        home-manager.users = users;
-        home-manager.extraSpecialArgs = { inherit inputs; };
-      };
-    in
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [
-        "aarch64-linux"
-        "aarch64-darwin"
-      ];
-
-      imports = [
-        inputs.treefmt-nix.flakeModule
-      ];
-
-      perSystem =
-        { system, ... }:
-        {
-          _module.args.pkgs = import nixpkgs {
-            inherit system;
-            config.allowUnfree = true;
-          };
-
-          treefmt = {
-            programs = {
-              nixfmt.enable = true;
-              nixfmt.indent = 2;
-              nixfmt.width = 120;
-              deadnix = {
-                enable = true;
-                no-underscore = true;
-              };
-              statix.enable = true;
-              keep-sorted.enable = true;
-              shellcheck.enable = true;
-              just.enable = true;
-              taplo.enable = true;
-              yamlfmt.enable = true;
-            };
-          };
-        };
-
-      flake = {
-        nixosConfigurations.ardmore = nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
-          specialArgs = { inherit inputs; };
-          modules = commonModules ++ [
-            ./modules/nixos
-            ./hosts/ardmore
-            home-manager.nixosModules.home-manager
-            (mkHomeManagerConfig homeUsers)
-          ];
-        };
-
-        darwinConfigurations.goldwater = nix-darwin.lib.darwinSystem {
-          system = "aarch64-darwin";
-          specialArgs = { inherit inputs; };
-          modules = commonModules ++ [
-            ./modules/darwin
-            ./hosts/goldwater
-            home-manager.darwinModules.home-manager
-            (mkHomeManagerConfig { inherit (homeUsers) jonaskruckenberg; })
-          ];
-        };
-
-        nixosConfigurations.vermeer = nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
-          specialArgs = { inherit inputs; };
-          modules = commonModules ++ [
-            ./modules/nixos
-            ./hosts/vermeer
-          ];
-        };
-      };
-    };
+  # Dendritic layout: every file under ./modules is a flake-parts module. Features publish
+  # NixOS / nix-darwin / home-manager modules into `flake.modules.<class>.<name>`; hosts under
+  # modules/hosts compose them. Paths containing `/_` are not imported.
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
 }

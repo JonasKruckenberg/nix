@@ -51,7 +51,7 @@
         ];
       };
       # Apple peripheral firmware, pinned via the private ardmore-firmware input (see flake.nix).
-      hardware.asahi.peripheralFirmwareDirectory = inputs.ardmore-firmware;
+      hardware.asahi.peripheralFirmwareDirectory = "${inputs.ardmore-firmware}/hosts/ardmore/firmware";
       # Exposes the Mesa Asahi Vulkan ICD under /run/opengl-driver for the llama.cpp sidecar.
       hardware.graphics.enable = true;
 

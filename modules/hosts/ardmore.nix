@@ -1,17 +1,12 @@
 { inputs, config, ... }:
 {
-  # Asahi Mac mini, headless server. Deployed by .github/workflows/deploy.yml over Tailscale SSH.
+  # Asahi Mac mini, headless server. Pulls and applies main on a timer (system.autoUpgrade below).
   flake.nixosConfigurations.ardmore = inputs.nixpkgs.lib.nixosSystem {
     modules = [ config.flake.modules.nixos.ardmore ];
   };
 
   flake.modules.nixos.ardmore =
-    {
-      lib,
-      pkgs,
-      modulesPath,
-      ...
-    }:
+    { lib, modulesPath, ... }:
     {
       imports =
         (with config.flake.modules.nixos; [
@@ -21,7 +16,6 @@
           daxhuiberts
           tailscale
           observability
-          bulletin
         ])
         ++ [
           inputs.apple-silicon-support.nixosModules.apple-silicon-support
@@ -52,8 +46,6 @@
       };
       # Apple peripheral firmware, pinned via the private ardmore-firmware input (see flake.nix).
       hardware.asahi.peripheralFirmwareDirectory = "${inputs.ardmore-firmware}/hosts/ardmore/firmware";
-      # Exposes the Mesa Asahi Vulkan ICD under /run/opengl-driver for the llama.cpp sidecar.
-      hardware.graphics.enable = true;
 
       boot.loader.systemd-boot.enable = true;
       boot.loader.systemd-boot.configurationLimit = 10;
@@ -71,31 +63,13 @@
       i18n.extraLocaleSettings.LC_ALL = "en_US.UTF-8";
       console.keyMap = "de-latin1-nodeadkeys";
 
-      # agenix identity. Tailscale SSH replaces OpenSSH here, so agenix cannot derive a key from
-      # services.openssh.hostKeys; this key was generated once on the box.
-      age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
-
-      # CI deploy user: nixos-rebuild --target-host/--build-host as this user, activation via sudo.
-      users.users.deploy = {
-        isSystemUser = true;
-        group = "deploy";
-        shell = pkgs.zsh;
+      # Continuous deployment by pulling: every hour fetch main from GitHub, build, switch. CI builds
+      # this configuration on every PR, so gate merges on it (branch protection) and this never
+      # switches into a broken generation.
+      system.autoUpgrade = {
+        enable = true;
+        flake = "github:JonasKruckenberg/nix#ardmore";
+        dates = "hourly";
       };
-      users.groups.deploy = { };
-      security.sudo.extraRules = [
-        {
-          users = [ "deploy" ];
-          commands = [
-            {
-              command = "ALL";
-              options = [ "NOPASSWD" ];
-            }
-          ];
-        }
-      ];
-      nix.settings.trusted-users = [
-        "root"
-        "deploy"
-      ];
     };
 }

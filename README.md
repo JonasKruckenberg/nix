@@ -6,7 +6,7 @@ each file in `modules/` is a flake-parts module that publishes one feature into
 
 | Host      | Kind                    | Apply                                                                        |
 | --------- | ----------------------- | ---------------------------------------------------------------------------- |
-| ardmore   | NixOS, Asahi Mac mini   | pushed by `.github/workflows/deploy.yml` on every merge to `main`            |
+| ardmore   | NixOS, Asahi Mac mini   | pulls `main` hourly by itself (`system.autoUpgrade`)                         |
 | goldwater | nix-darwin, MacBook     | `sudo darwin-rebuild switch --flake github:JonasKruckenberg/nix#goldwater`   |
 | work      | home-manager, MacBook   | `nix run home-manager -- switch --flake github:JonasKruckenberg/nix#work`    |
 

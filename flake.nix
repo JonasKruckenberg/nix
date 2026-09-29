@@ -41,8 +41,11 @@
     # machine's EFI partition by the Asahi installer. Apple's blobs are not redistributable, so they
     # live in a private repo; this lock pins their revision and content hash, the bytes stay out of
     # this public tree. Not LFS: `github:` inputs are fetched as tarballs, which omit LFS content.
+    # TEMPORARY: pinned to the last commit of this repo that still carried the blobs, so CI can
+    # validate the rest of the tree. Switch to github:JonasKruckenberg/ardmore-firmware once that
+    # private repo exists and the CI token covers it, then drop the subpath in modules/hosts/ardmore.nix.
     ardmore-firmware = {
-      url = "github:JonasKruckenberg/ardmore-firmware";
+      url = "github:JonasKruckenberg/nix/024fa60";
       flake = false;
     };
   };

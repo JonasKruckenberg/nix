@@ -10,4 +10,5 @@ each file in `modules/` is a flake-parts module that publishes one feature into
 | goldwater | nix-darwin, MacBook     | `sudo darwin-rebuild switch --flake github:JonasKruckenberg/nix#goldwater`   |
 | work      | home-manager, MacBook   | `nix run home-manager -- switch --flake github:JonasKruckenberg/nix#work`    |
 
-CI builds every configuration for its system on every PR (`nix flake check`). Format with `nix fmt`.
+CI runs `nix flake check` on every PR: the darwin configurations are built, ardmore is evaluated (its Asahi kernel is
+not in any binary cache and builds on the device). Format with `nix fmt`.

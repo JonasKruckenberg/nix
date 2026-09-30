@@ -15,13 +15,17 @@ jobs:
         include:
           # Every configuration is a check on its own system (modules/ci.nix). The darwin
           # runner builds its hosts outright; they are small and fully cached.
-          - runner: macos-15
+          - name: darwin
+            runner: macos-15
             args: ""
           # ardmore's toplevel needs the Asahi kernel, which no binary cache carries for this
           # nixpkgs pin, so the Linux runner only evaluates. ardmore builds it itself on pull
           # and keeps the old generation if that fails.
-          - runner: ubuntu-24.04-arm
+          - name: linux
+            runner: ubuntu-24.04-arm
             args: --no-build
+    # Stable job names: branch protection on main requires `darwin` and `linux`.
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     steps:

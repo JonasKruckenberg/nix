@@ -45,7 +45,7 @@
     homeManager.workstation =
       { pkgs, lib, ... }:
       {
-        home.packages = lib.optionals pkgs.stdenv.isDarwin [ pkgs.jetbrains.rust-rover ];
+        home.packages = lib.optionals pkgs.stdenv.isDarwin [ ];
       };
   };
 }

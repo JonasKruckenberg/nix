@@ -38,6 +38,9 @@ in
       system.stateVersion = "25.11";
 
       # Hardware
+      # Explicit, because upstream plans to flip the default to false; that would silently drop
+      # the Asahi kernel and boot chain while CI (eval-only) still passes.
+      hardware.asahi.enable = true;
       boot.initrd.availableKernelModules = [
         "xhci_pci"
         "usbhid"
@@ -60,6 +63,9 @@ in
       # evaluation; pure builds elsewhere (CI) find nothing and produce a system without it.
       hardware.asahi.extractPeripheralFirmware = firmwareFound;
       warnings = lib.optional (!firmwareFound) "ardmore: Asahi firmware not found; on the device, build with --impure";
+      # Headless, so no use for the Apple Video Decoder. Its firmware (pkgs.avd-fw) is only in
+      # nixpkgs-unstable, not in the nixos-26.05 we follow.
+      hardware.asahi.avd.enable = false;
 
       boot.loader.systemd-boot.enable = true;
       boot.loader.systemd-boot.configurationLimit = 10;

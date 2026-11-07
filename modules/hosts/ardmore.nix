@@ -23,8 +23,6 @@ in
         (with modules.nixos; [
           base
           jonas
-          memark
-          daxhuiberts
           tailscale
           observability
         ])

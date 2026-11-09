@@ -2,8 +2,9 @@ _: {
   # Single-node observability: journald -> Alloy -> Loki, node exporter -> Prometheus, both into
   # Grafana. Everything binds to loopback; Grafana trusts an auth proxy in front of it.
   flake.modules.nixos.observability =
-    { config, ... }:
+    { config, lib, ... }:
     let
+      host = config.networking.hostName;
       loki = config.services.loki.configuration.server;
       lokiUrl = "http://${loki.http_listen_address}:${toString loki.http_listen_port}";
     in
@@ -69,6 +70,51 @@ _: {
             ];
           }
         ];
+        # autoUpgrade is how this host gets every change, so its failing must not go unnoticed. These
+        # only fire in Prometheus and Grafana; delivering them (Alertmanager or a Grafana contact
+        # point) is separate. The systemd collector above provides both metrics.
+        rules = lib.optional config.system.autoUpgrade.enable (
+          builtins.toJSON {
+            groups = [
+              {
+                name = "nixos-upgrade";
+                rules = [
+                  {
+                    alert = "NixosUpgradeFailed";
+                    expr = ''node_systemd_unit_state{name="nixos-upgrade.service",state="failed"} == 1'';
+                    for = "5m";
+                    labels.severity = "warning";
+                    annotations = {
+                      summary = "${host}: autoUpgrade failed";
+                      description = "Evaluation, build or switch failed: journalctl -u nixos-upgrade -n 100. Clears after the next successful run.";
+                    };
+                  }
+                  {
+                    # Long enough for an on-device kernel build.
+                    alert = "NixosUpgradeStuck";
+                    expr = ''node_systemd_unit_state{name="nixos-upgrade.service",state="activating"} == 1'';
+                    for = "3h";
+                    labels.severity = "warning";
+                    annotations = {
+                      summary = "${host}: autoUpgrade running for over 3h";
+                      description = "Likely a unit blocking the switch: systemctl list-jobs.";
+                    };
+                  }
+                  {
+                    alert = "NixosUpgradeNotRunning";
+                    expr = ''time() - node_systemd_timer_last_trigger_seconds{name="nixos-upgrade.timer"} > 3 * 3600'';
+                    for = "15m";
+                    labels.severity = "warning";
+                    annotations = {
+                      summary = "${host}: autoUpgrade timer hasn't fired in 3h";
+                      description = "systemctl status nixos-upgrade.timer";
+                    };
+                  }
+                ];
+              }
+            ];
+          }
+        );
       };
 
       services.loki = {

@@ -27,8 +27,13 @@ jobs:
     # Stable job names: branch protection on main requires `darwin` and `linux`.
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
-    # The linux job also builds refractory from source (no binary cache has it).
+    # The linux job also builds refractory from source (no binary cache has it), so it keeps its
+    # Nix store in the Actions cache: an unchanged lock restores refractory built, a changed one
+    # restores main's newest store and rebuilds only what changed.
     timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: write # purging old caches
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@v3
@@ -38,6 +43,17 @@ jobs:
             # refractory is private: FLAKE_INPUTS_TOKEN reads it (and every public repo). PRs from
             # forks get no secrets and so can't evaluate ardmore.
             access-tokens = github.com=${{ secrets.FLAKE_INPUTS_TOKEN }}
+      # Caches a pull request saves are visible to that pull request only; main's are visible to all.
+      - if: matrix.name == 'linux'
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-${{ runner.arch }}-
+          gc-max-store-size-linux: 6G
+          purge: true
+          purge-prefixes: nix-${{ runner.os }}-${{ runner.arch }}-
+          purge-last-accessed: P7D
+          purge-primary-key: never
       - run: nix flake check -L ${{ matrix.args }}
       # ardmore is only evaluated above; its refractory is built here, so a refractory that fails to
       # build stops the merge instead of reaching the host (modules/server/refractory.nix).

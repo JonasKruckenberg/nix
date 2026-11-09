@@ -1,10 +1,36 @@
 _: {
   # Single-node observability: journald -> Alloy -> Loki, node exporter -> Prometheus, both into
-  # Grafana. Everything binds to loopback; Grafana trusts an auth proxy in front of it.
+  # Grafana; Prometheus alerts -> Alertmanager -> Telegram. Everything binds to loopback; Grafana
+  # trusts an auth proxy in front of it.
+  #
+  # Kept by hand on the host: /etc/alertmanager/telegram.env (root, 0400) with TELEGRAM_BOT_TOKEN
+  # and TELEGRAM_CHAT_ID. Without it Alertmanager fails to start.
   flake.modules.nixos.observability =
-    { config, lib, ... }:
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     let
       host = config.networking.hostName;
+      am = config.services.prometheus.alertmanager;
+      # `$VARS` are filled in from the environment file by the module's envsubst when the service
+      # starts. chat_id is unquoted, so it substitutes to the integer Alertmanager wants.
+      alertmanagerConfig = ''
+        route:
+          receiver: telegram
+          group_by: [alertname]
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 12h
+        receivers:
+          - name: telegram
+            telegram_configs:
+              - bot_token: "$TELEGRAM_BOT_TOKEN"
+                chat_id: $TELEGRAM_CHAT_ID
+                send_resolved: true
+      '';
       loki = config.services.loki.configuration.server;
       lokiUrl = "http://${loki.http_listen_address}:${toString loki.http_listen_port}";
     in
@@ -115,7 +141,32 @@ _: {
             ];
           }
         );
+        alertmanagers = [
+          { static_configs = [ { targets = [ "${am.listenAddress}:${toString am.port}" ]; } ]; }
+        ];
+
+        alertmanager = {
+          enable = true;
+          listenAddress = "127.0.0.1";
+          # No HA: the default would also gossip on 0.0.0.0:9094, reachable over the tailnet.
+          extraFlags = [ "--cluster.listen-address=" ];
+          configText = alertmanagerConfig;
+          environmentFile = "/etc/alertmanager/telegram.env";
+          # amtool can't see the environment file; the check below fills in stand-ins instead.
+          checkConfig = false;
+        };
       };
+
+      # The configuration, with stand-in secrets, must pass `amtool check-config` for the system
+      # to build.
+      system.checks = [
+        (pkgs.runCommand "alertmanager-config-check" { nativeBuildInputs = [ am.package ]; } ''
+          TELEGRAM_BOT_TOKEN=0:stand-in TELEGRAM_CHAT_ID=1 ${lib.getExe pkgs.envsubst} \
+            -i ${pkgs.writeText "alertmanager.yml" alertmanagerConfig} -o alertmanager.yml
+          amtool check-config alertmanager.yml
+          touch $out
+        '')
+      ];
 
       services.loki = {
         enable = true;

@@ -22,6 +22,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Private: fetching it needs a token, on ardmore (/etc/nix/github-token.conf) and in CI.
+    # nixpkgs follows ours, so the FoundationDB client it links is the server's version.
+    refractory = {
+      url = "github:JonasKruckenberg/refractory";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     apple-silicon-support = {
       url = "github:nix-community/nixos-apple-silicon/main";
       inputs.nixpkgs.follows = "nixpkgs";

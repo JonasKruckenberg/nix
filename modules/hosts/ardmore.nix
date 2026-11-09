@@ -25,6 +25,7 @@ in
           jonas
           tailscale
           observability
+          refractory
         ])
         ++ [
           inputs.apple-silicon-support.nixosModules.apple-silicon-support

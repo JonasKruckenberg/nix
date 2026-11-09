@@ -1,0 +1,54 @@
+# Moves the refractory input to its main and merges once CI passes; ardmore then pulls it with
+# its next autoUpgrade. refractory's CI dispatches `refractory-updated` after a green push to main;
+# the schedule catches a missed dispatch.
+#
+# Secrets:
+# - FLAKE_INPUTS_TOKEN: read access to refractory, which is private.
+# - NIX_BOT_TOKEN: contents and pull requests read/write on this repo. Not GITHUB_TOKEN: a pull
+#   request it opens triggers no workflow, so the required checks would never run.
+name: update refractory
+on:
+  repository_dispatch:
+    types: [refractory-updated]
+  schedule:
+    - cron: "23 4 * * *"
+  workflow_dispatch:
+concurrency:
+  group: update-refractory
+  cancel-in-progress: false
+permissions: {}
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.NIX_BOT_TOKEN }}
+      - uses: DeterminateSystems/determinate-nix-action@v3
+        with:
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.FLAKE_INPUTS_TOKEN }}
+      - id: lock
+        run: |
+          old=$(jq -r .nodes.refractory.locked.rev flake.lock)
+          nix flake update refractory
+          new=$(jq -r .nodes.refractory.locked.rev flake.lock)
+          echo "old=$old" >> "$GITHUB_OUTPUT"
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+      - id: pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.NIX_BOT_TOKEN }}
+          branch: update/refractory
+          delete-branch: true
+          commit-message: "refractory: ${{ steps.lock.outputs.new }}"
+          title: "refractory: ${{ steps.lock.outputs.new }}"
+          body: |
+            https://github.com/JonasKruckenberg/refractory/compare/${{ steps.lock.outputs.old }}...${{ steps.lock.outputs.new }}
+
+            Merges itself once `darwin` and `linux` pass; ardmore applies it on its next autoUpgrade.
+      - if: steps.pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.NIX_BOT_TOKEN }}
+        run: gh pr merge --auto --squash "${{ steps.pr.outputs.pull-request-number }}" --repo "$GITHUB_REPOSITORY"

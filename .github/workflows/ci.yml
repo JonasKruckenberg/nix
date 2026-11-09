@@ -27,12 +27,18 @@ jobs:
     # Stable job names: branch protection on main requires `darwin` and `linux`.
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
+    # The linux job also builds refractory from source (no binary cache has it).
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@v3
         with:
           extra-conf: |
             # Runner IPs share GitHub's anonymous API rate limit; authenticate flake-input fetches.
-            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            # refractory is private: FLAKE_INPUTS_TOKEN reads it (and every public repo).
+            access-tokens = github.com=${{ secrets.FLAKE_INPUTS_TOKEN || secrets.GITHUB_TOKEN }}
       - run: nix flake check -L ${{ matrix.args }}
+      # ardmore is only evaluated above; its refractory is built here, so a refractory that fails to
+      # build stops the merge instead of reaching the host (modules/server/refractory.nix).
+      - if: matrix.name == 'linux'
+        run: nix build -L --no-link .#refractory

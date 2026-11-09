@@ -22,6 +22,21 @@
         "type": "github"
       }
     },
+    "crane": {
+      "locked": {
+        "lastModified": 1793836618,
+        "narHash": "sha256-TREenflwEjxOSq292FYwbc3kEm7TDRtXCZRNWEdjBmg=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "79fd63528501446749c09f08cad486a58c7d173e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "locked": {
         "lastModified": 1761640442,
@@ -143,6 +158,28 @@
         "type": "github"
       }
     },
+    "refractory": {
+      "inputs": {
+        "crane": "crane",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "rust-overlay": "rust-overlay"
+      },
+      "locked": {
+        "lastModified": 1794091019,
+        "narHash": "sha256-/cqUWIvc8YRlP6N1VLw85zBKI3LfX4ae5gn9FCAI3OU=",
+        "owner": "JonasKruckenberg",
+        "repo": "refractory",
+        "rev": "c8edcfd9e6a134009bc4dc3671639f5412daf514",
+        "type": "github"
+      },
+      "original": {
+        "owner": "JonasKruckenberg",
+        "repo": "refractory",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "apple-silicon-support": "apple-silicon-support",
@@ -151,7 +188,29 @@
         "import-tree": "import-tree",
         "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs",
+        "refractory": "refractory",
         "treefmt-nix": "treefmt-nix"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "refractory",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793523538,
+        "narHash": "sha256-vHPjEGxtV+StSLW9DJpa3c3gt0UD0s1q4nC98AZ0N0c=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "c85ccd343087c57da6021cafa1647142ad03e32e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     },
     "treefmt-nix": {

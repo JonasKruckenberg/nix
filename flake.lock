@@ -176,6 +176,7 @@
       },
       "original": {
         "owner": "JonasKruckenberg",
+        "ref": "release",
         "repo": "refractory",
         "type": "github"
       }

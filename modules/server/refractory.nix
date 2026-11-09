@@ -11,7 +11,8 @@
       };
     };
 
-  # refractory (github:JonasKruckenberg/refractory): its control plane, the FoundationDB it keeps
+  # refractory (github:JonasKruckenberg/refractory, branch `release`, which its CI fast-forwards
+  # to each main commit that passed): its control plane, the FoundationDB it keeps
   # state in, and the public Funnel its webhooks arrive through. The control plane itself is not
   # enabled yet: it has no webhook endpoint and can't be handed its secrets until slice 6.
   #
@@ -23,8 +24,9 @@
   flake.modules.nixos.refractory =
     { config, pkgs, ... }:
     let
-      # Public https://<host>.<tailnet>.ts.net (443) is forwarded here: the webhook listener only,
-      # never the executors' `listen` or `metrics_listen`.
+      # Public https://<host>.<tailnet>.ts.net (443) is forwarded here. Only ever a webhook-only
+      # listener (slice 6 adds one): never the control plane's `listen`, which is its whole API, nor
+      # `metrics_listen`. Until then nothing listens and the Funnel answers 502.
       webhookPort = 7702;
     in
     {
@@ -43,20 +45,33 @@
       };
 
       # `tailscale funnel --bg` persists in tailscaled's state, not here; reapplying it on every boot
-      # and switch means a reset node or a new machine gets it back. Idempotent.
+      # and switch means a reset node or a new machine gets it back. Idempotent, and it leaves the
+      # node's Tailscale Services (svc:grafana) alone.
+      #
+      # Without the tailnet policy's `funnel` nodeAttr, `tailscale funnel` prints an enablement URL
+      # and either exits 0 having done nothing or waits for someone to click it. So: a start timeout
+      # (a wait would otherwise block `nixos-rebuild switch`, autoUpgrade's included), and success
+      # only once Funnel is actually on; failures retry, e.g. while tailscaled isn't logged in yet.
       systemd.services.tailscale-funnel = {
         description = "Tailscale Funnel to refractory's webhook listener";
         after = [ "tailscaled.service" ];
         wants = [ "tailscaled.service" ];
         wantedBy = [ "multi-user.target" ];
-        path = [ config.services.tailscale.package ];
-        # tailscaled answers before it is logged in; fail and retry until it is.
-        script = "tailscale funnel --bg ${toString webhookPort}";
+        path = [
+          config.services.tailscale.package
+          pkgs.jq
+        ];
+        script = ''
+          tailscale funnel --bg ${toString webhookPort}
+          host=$(tailscale status --json | jq -er '.Self.DNSName | rtrimstr(".")')
+          tailscale serve status --json | jq -e --arg k "$host:443" '.AllowFunnel[$k] == true' > /dev/null
+        '';
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
+          TimeoutStartSec = "60s";
           Restart = "on-failure";
-          RestartSec = "15s";
+          RestartSec = "30s";
         };
         unitConfig.StartLimitIntervalSec = 0;
       };

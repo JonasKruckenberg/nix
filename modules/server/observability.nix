@@ -96,10 +96,70 @@ _: {
             ];
           }
         ];
-        # autoUpgrade is how this host gets every change, so its failing must not go unnoticed. These
-        # only fire in Prometheus and Grafana; delivering them (Alertmanager or a Grafana contact
-        # point) is separate. The systemd collector above provides both metrics.
-        rules = lib.optional config.system.autoUpgrade.enable (
+        # Alertmanager (below) sends these to Telegram. The host group replaces what were Grafana
+        # alerts; autoUpgrade is how this host gets every change, so its failing must not go
+        # unnoticed either (the systemd collector above provides its metrics).
+        rules = [
+          (builtins.toJSON {
+            groups = [
+              {
+                name = "host";
+                rules = [
+                  {
+                    alert = "HostOutOfMemory";
+                    expr = "avg_over_time(node_memory_MemAvailable_bytes[5m]) < 64 * 1024 * 1024";
+                    for = "5m";
+                    labels.severity = "critical";
+                    annotations = {
+                      summary = "${host} is running out of memory";
+                      description = "Available memory averaged under 64 MiB for 5 minutes ({{ $value | humanize1024 }}B now).";
+                    };
+                  }
+                  {
+                    alert = "HostOomKill";
+                    expr = "increase(node_vmstat_oom_kill[10m]) > 0";
+                    labels.severity = "warning";
+                    annotations = {
+                      summary = "${host}: the kernel OOM-killed a process";
+                      description = "journalctl -k -g 'Out of memory' --since -15min";
+                    };
+                  }
+                  {
+                    # i2c_*_0038 is the speaker amplifier (tas2764), whose reading isn't a chassis
+                    # temperature.
+                    alert = "HostTemperatureHigh";
+                    expr = ''node_hwmon_temp_celsius{chip!~"i2c_.*_0038"} > 89'';
+                    for = "5m";
+                    labels.severity = "critical";
+                    annotations = {
+                      summary = "${host} is running hot";
+                      description = "{{ $labels.chip }} {{ $labels.sensor }} has been over 89°C for 5 minutes ({{ $value | printf \"%.1f\" }}°C now).";
+                    };
+                  }
+                  {
+                    alert = "HostTemperatureAlarm";
+                    expr = "node_hwmon_temp_alarm > 0";
+                    for = "5m";
+                    labels.severity = "critical";
+                    annotations = {
+                      summary = "${host} signalled a temperature alarm";
+                      description = "{{ $labels.chip }} {{ $labels.sensor }} raised its hardware temperature alarm.";
+                    };
+                  }
+                  {
+                    # Every alert above reads node_exporter; without it they would all go quiet.
+                    alert = "NodeExporterDown";
+                    expr = ''up{job="node"} == 0 or absent(up{job="node"})'';
+                    for = "5m";
+                    labels.severity = "critical";
+                    annotations.summary = "${host}: node_exporter isn't being scraped";
+                  }
+                ];
+              }
+            ];
+          })
+        ]
+        ++ lib.optional config.system.autoUpgrade.enable (
           builtins.toJSON {
             groups = [
               {

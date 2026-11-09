@@ -23,9 +23,10 @@
     };
 
     # Private: fetching it needs a token, on ardmore (/etc/nix/github-token.conf) and in CI.
-    # nixpkgs follows ours, so the FoundationDB client it links is the server's version.
+    # `release` only ever holds main commits refractory's CI passed. nixpkgs follows ours, so the
+    # FoundationDB client it links is the server's version.
     refractory = {
-      url = "github:JonasKruckenberg/refractory";
+      url = "github:JonasKruckenberg/refractory/release";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

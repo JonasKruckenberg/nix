@@ -18,4 +18,13 @@ in
     jonas
     ardmore
   ];
+  # linear oauth and webhook secrets for the metafactory experiment
+  "metafactory-webhook-secret.age".publicKeys = [
+    jonas
+    ardmore
+  ];
+  "metafactory-linear-client-secret.age".publicKeys = [
+    jonas
+    ardmore
+  ];
 }

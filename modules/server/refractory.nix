@@ -16,11 +16,13 @@
   # state in, and the public Funnel its webhooks arrive through. The control plane itself is not
   # enabled yet: it has no webhook endpoint and can't be handed its secrets until slice 6.
   #
-  # Kept by hand on the host, never in the store:
-  # - /etc/nix/github-token.conf: `access-tokens = github.com=<PAT>`, read access to refractory,
-  #   which is private; without it every evaluation of this host fails, autoUpgrade included.
-  # - /etc/refractory/*: the service's secrets, root-owned 0400.
-  # - The tailnet policy's `funnel` nodeAttr for this host.
+  # secrets/github-token.conf.age is `access-tokens = github.com=<PAT>`, read access to refractory,
+  # which is private; without it every evaluation of this host fails, autoUpgrade included. The
+  # running generation decrypts it for the next one's evaluation, so a fresh install needs the
+  # token passed by hand once (`--option access-tokens`). The service's own secrets will join it
+  # in ./secrets when the control plane is enabled.
+  #
+  # Kept by hand, outside this repository: the tailnet policy's `funnel` nodeAttr for this host.
   flake.modules.nixos.refractory =
     { config, pkgs, ... }:
     let
@@ -32,8 +34,9 @@
     {
       imports = [ inputs.refractory.nixosModules.default ];
 
+      age.secrets.github-token.file = ../../secrets/github-token.conf.age;
       nix.extraOptions = ''
-        !include /etc/nix/github-token.conf
+        !include ${config.age.secrets.github-token.path}
       '';
 
       # On first start (no /etc/foundationdb/fdb.cluster) the module creates the cluster file and

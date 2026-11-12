@@ -3,8 +3,7 @@ _: {
   # Grafana; Prometheus alerts -> Alertmanager -> Telegram. Everything binds to loopback; Grafana
   # trusts an auth proxy in front of it.
   #
-  # Kept by hand on the host: /etc/alertmanager/telegram.env (root, 0400) with TELEGRAM_BOT_TOKEN
-  # and TELEGRAM_CHAT_ID. Without it Alertmanager fails to start.
+  # secrets/telegram.env.age holds TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID for Alertmanager.
   flake.modules.nixos.observability =
     {
       config,
@@ -211,11 +210,13 @@ _: {
           # No HA: the default would also gossip on 0.0.0.0:9094, reachable over the tailnet.
           extraFlags = [ "--cluster.listen-address=" ];
           configText = alertmanagerConfig;
-          environmentFile = "/etc/alertmanager/telegram.env";
+          environmentFile = config.age.secrets.telegram-env.path;
           # amtool can't see the environment file; the check below fills in stand-ins instead.
           checkConfig = false;
         };
       };
+
+      age.secrets.telegram-env.file = ../../secrets/telegram.env.age;
 
       # The configuration, with stand-in secrets, must pass `amtool check-config` for the system
       # to build.

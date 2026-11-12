@@ -22,7 +22,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Private: fetching it needs a token, on ardmore (/etc/nix/github-token.conf) and in CI.
+    # Secrets, age-encrypted in ./secrets to the hosts that read them; see secrets/secrets.nix.
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.darwin.follows = "nix-darwin";
+      inputs.home-manager.follows = "home-manager";
+    };
+
+    # Private: fetching it needs a token, on ardmore (secrets/github-token.conf.age) and in CI.
     # `release` only ever holds main commits refractory's CI passed. nixpkgs follows ours, so the
     # FoundationDB client it links is the server's version.
     refractory = {

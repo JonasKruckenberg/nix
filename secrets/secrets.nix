@@ -27,4 +27,9 @@ in
     jonas
     ardmore
   ];
+  # CLAUDE_CODE_OAUTH_TOKEN=<token>, from `claude setup-token`: the metafactory's agents' Claude Code.
+  "metafactory-claude-token.env.age".publicKeys = [
+    jonas
+    ardmore
+  ];
 }

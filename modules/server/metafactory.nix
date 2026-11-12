@@ -4,8 +4,8 @@
   # build/metafactory). It runs inside the dev shell of its own jj checkout of refractory, beside
   # that checkout's FoundationDB, so this host builds nothing of refractory's beyond the service.
   #
-  # The host clones the checkout itself (metafactory-checkout) and Claude Code authenticates with a
-  # token from secrets/, so the only login on the box is Codex's: `sudo metafactory-codex-login`.
+  # The module clones the checkout and Claude Code authenticates with a token from secrets/, so the
+  # only login on the box is Codex's: `sudo metafactory-codex-login`.
   #
   # Kept by hand, outside this repository:
   # - the tailnet policy's `funnel` nodeAttr for this host;
@@ -44,53 +44,30 @@
         webhookSecretFile = config.age.secrets.metafactory-webhook-secret.path;
         clientSecretFile = config.age.secrets.metafactory-linear-client-secret.path;
         email = "metafactory@users.noreply.github.com";
+        claudeTokenFile = config.age.secrets.metafactory-claude-token.path;
         # The module's own Funnel unit can hang a switch; tailscale-funnel below can't.
         funnel = false;
       };
 
-      # `CLAUDE_CODE_OAUTH_TOKEN=<token>`, from `claude setup-token` on a machine with a browser.
-      # The agents inherit it through `nix develop`; they run as the metafactory user, which could
-      # read a login on disk just the same.
-      age.secrets.metafactory-claude-token.file = ../../secrets/metafactory-claude-token.env.age;
-      systemd.services.metafactory.serviceConfig.EnvironmentFile = config.age.secrets.metafactory-claude-token.path;
+      # The token `claude setup-token` prints on a machine with a browser, alone in the file.
+      age.secrets.metafactory-claude-token.file = ../../secrets/metafactory-claude-token.age;
 
-      # Clones refractory into cfg.repo once, with the host's read token (github-token above). The
-      # token stays root's: git gets it from a credential helper reading this unit's environment,
-      # never argv or the checkout's config, and the metafactory user gets a plain https remote.
-      # Cloned beside and moved into place, so a failed clone leaves nothing that looks done.
-      systemd.services.metafactory-checkout = {
-        description = "Clone the metafactory's checkout of refractory";
-        wantedBy = [ "multi-user.target" ];
-        wants = [ "network-online.target" ];
-        after = [ "network-online.target" ];
-        unitConfig.ConditionPathExists = "!${cfg.repo}";
-        path = [
-          pkgs.git
-          pkgs.jujutsu
-          pkgs.gnused
-          pkgs.util-linux # runuser
-        ];
-        script = ''
-          GITHUB_TOKEN=$(sed -n 's/^access-tokens *= *github\.com=//p' ${config.age.secrets.github-token.path})
-          export GITHUB_TOKEN
-          tmp=${cfg.repo}.cloning
-          rm -rf "$tmp"
-          git -c credential.helper= -c credential.helper='!f() { echo username=x-access-token; echo "password=$GITHUB_TOKEN"; }; f' \
-            clone https://github.com/JonasKruckenberg/refractory "$tmp"
-          chown -R metafactory:metafactory "$tmp"
-          cd "$tmp"
-          runuser -u metafactory -- env HOME=/var/lib/metafactory jj git init --colocate
-          runuser -u metafactory -- env HOME=/var/lib/metafactory jj bookmark track main --remote=origin
-          mv "$tmp" ${cfg.repo}
-        '';
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-        };
+      # refractory is private, and the metafactory clones it and fetches its main before every run,
+      # as its own user: that user (and so its agents) reads the host's token for refractory, a
+      # second decryption of github-token above, through a git credential helper. jj fetches
+      # through git. For every other user the file is unreadable and the helper says nothing.
+      age.secrets.metafactory-github-token = {
+        file = ../../secrets/github-token.conf.age;
+        owner = "metafactory";
       };
-      systemd.services.metafactory-fdb = {
-        requires = [ "metafactory-checkout.service" ];
-        after = [ "metafactory-checkout.service" ];
+      programs.git = {
+        enable = true;
+        config.credential."https://github.com".helper =
+          let
+            token = config.age.secrets.metafactory-github-token.path;
+            sed = lib.getExe pkgs.gnused;
+          in
+          ''!f() { test -r ${token} && echo username=x-access-token && echo "password=$(${sed} -n 's/^access-tokens *= *github[.]com=//p' ${token})"; }; f'';
       };
 
       # Codex has no token to hand over like Claude's: its one login, by device code (a short code

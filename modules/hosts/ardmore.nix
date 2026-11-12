@@ -28,11 +28,16 @@ in
           refractory
         ])
         ++ [
+          inputs.agenix.nixosModules.default
           inputs.apple-silicon-support.nixosModules.apple-silicon-support
           (modulesPath + "/installer/scan/not-detected.nix")
         ];
 
       networking.hostName = "ardmore";
+
+      # agenix decrypts ./secrets with the host key. OpenSSH is off (Tailscale SSH), so the key's
+      # path isn't inferred; the key itself was generated when the host was installed.
+      age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
       nixpkgs.hostPlatform = "aarch64-linux";
       system.stateVersion = "25.11";
 

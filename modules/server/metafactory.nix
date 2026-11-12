@@ -4,20 +4,23 @@
   # build/metafactory). It runs inside the dev shell of its own jj checkout of refractory, beside
   # that checkout's FoundationDB, so this host builds nothing of refractory's beyond the service.
   #
+  # The host clones the checkout itself (metafactory-checkout) and Claude Code authenticates with a
+  # token from secrets/, so the only login on the box is Codex's: `sudo metafactory-codex-login`.
+  #
   # Kept by hand, outside this repository:
   # - the tailnet policy's `funnel` nodeAttr for this host;
-  # - the Linear app (its webhook: https://ardmore.tailf383a6.ts.net/linear);
-  # - as the metafactory user (`sudo -u metafactory -H bash`): the checkout, cloned with
-  #   `jj git clone --colocate` into /var/lib/metafactory/refractory, and the agents' CLIs logged
-  #   in inside its `nix develop` (`claude`, then `codex login`). Until the checkout exists both
-  #   services are skipped; start them by hand once it does.
+  # - the Linear app (webhook https://ardmore.tailf383a6.ts.net/linear, callback …/callback),
+  #   installed once by opening https://ardmore.tailf383a6.ts.net/install.
   flake.modules.nixos.metafactory =
-    { config, pkgs, ... }:
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     let
       cfg = config.services.metafactory;
-      # Units that need the checkout: skipped, not failed, before it exists, so a switch (and
-      # autoUpgrade with it) doesn't fail on a fresh host.
-      needsCheckout.unitConfig.ConditionPathExists = "${cfg.repo}/flake.nix";
+      nix = lib.getExe config.nix.package;
     in
     {
       imports = [ inputs.refractory.nixosModules.metafactory ];
@@ -45,8 +48,60 @@
         funnel = false;
       };
 
-      systemd.services.metafactory = needsCheckout;
-      systemd.services.metafactory-fdb = needsCheckout;
+      # `CLAUDE_CODE_OAUTH_TOKEN=<token>`, from `claude setup-token` on a machine with a browser.
+      # The agents inherit it through `nix develop`; they run as the metafactory user, which could
+      # read a login on disk just the same.
+      age.secrets.metafactory-claude-token.file = ../../secrets/metafactory-claude-token.env.age;
+      systemd.services.metafactory.serviceConfig.EnvironmentFile = config.age.secrets.metafactory-claude-token.path;
+
+      # Clones refractory into cfg.repo once, with the host's read token (github-token above). The
+      # token stays root's: git gets it from a credential helper reading this unit's environment,
+      # never argv or the checkout's config, and the metafactory user gets a plain https remote.
+      # Cloned beside and moved into place, so a failed clone leaves nothing that looks done.
+      systemd.services.metafactory-checkout = {
+        description = "Clone the metafactory's checkout of refractory";
+        wantedBy = [ "multi-user.target" ];
+        wants = [ "network-online.target" ];
+        after = [ "network-online.target" ];
+        unitConfig.ConditionPathExists = "!${cfg.repo}";
+        path = [
+          pkgs.git
+          pkgs.jujutsu
+          pkgs.gnused
+          pkgs.util-linux # runuser
+        ];
+        script = ''
+          GITHUB_TOKEN=$(sed -n 's/^access-tokens *= *github\.com=//p' ${config.age.secrets.github-token.path})
+          export GITHUB_TOKEN
+          tmp=${cfg.repo}.cloning
+          rm -rf "$tmp"
+          git -c credential.helper= -c credential.helper='!f() { echo username=x-access-token; echo "password=$GITHUB_TOKEN"; }; f' \
+            clone https://github.com/JonasKruckenberg/refractory "$tmp"
+          chown -R metafactory:metafactory "$tmp"
+          cd "$tmp"
+          runuser -u metafactory -- env HOME=/var/lib/metafactory jj git init --colocate
+          runuser -u metafactory -- env HOME=/var/lib/metafactory jj bookmark track main --remote=origin
+          mv "$tmp" ${cfg.repo}
+        '';
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+        };
+      };
+      systemd.services.metafactory-fdb = {
+        requires = [ "metafactory-checkout.service" ];
+        after = [ "metafactory-checkout.service" ];
+      };
+
+      # Codex has no token to hand over like Claude's: its one login, by device code (a short code
+      # entered on any device), stored in the metafactory user's ~/.codex.
+      environment.systemPackages = [
+        (pkgs.writeShellScriptBin "metafactory-codex-login" ''
+          cd ${cfg.repo}
+          exec ${lib.getExe' pkgs.util-linux "runuser"} -u metafactory -- \
+            env HOME=/var/lib/metafactory ${nix} develop ${cfg.repo} --command codex login --device-auth
+        '')
+      ];
 
       # `tailscale funnel --bg` persists in tailscaled's state, not here; reapplying it on every boot
       # and switch means a reset node or a new machine gets it back. Idempotent, and it leaves the

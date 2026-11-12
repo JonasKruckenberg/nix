@@ -25,7 +25,7 @@ in
           jonas
           tailscale
           observability
-          refractory
+          metafactory
         ])
         ++ [
           inputs.agenix.nixosModules.default

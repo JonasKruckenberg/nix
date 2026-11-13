@@ -1,5 +1,6 @@
-# Moves the refractory input to its `main` branch, and merges once this repository's CI passes;
-# ardmore then pulls it with its next autoUpgrade. Hourly, like autoUpgrade.
+# Moves the refractory input to its `release` branch, which refractory's CI fast-forwards to each
+# main commit that passed, and merges once this repository's CI passes; ardmore then pulls it with
+# its next autoUpgrade. Hourly, like autoUpgrade.
 #
 # Secrets:
 # - FLAKE_INPUTS_TOKEN: read access to refractory, which is private.

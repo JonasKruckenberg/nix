@@ -18,18 +18,4 @@ in
     jonas
     ardmore
   ];
-  # linear oauth and webhook secrets for the metafactory experiment
-  "metafactory-webhook-secret.age".publicKeys = [
-    jonas
-    ardmore
-  ];
-  "metafactory-linear-client-secret.age".publicKeys = [
-    jonas
-    ardmore
-  ];
-  # The token `claude setup-token` prints, alone: the metafactory's agents' Claude Code.
-  "metafactory-claude-token.age".publicKeys = [
-    jonas
-    ardmore
-  ];
 }

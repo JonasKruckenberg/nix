@@ -25,6 +25,7 @@ in
           jonas
           tailscale
           observability
+          jorb
         ])
         ++ [
           inputs.agenix.nixosModules.default

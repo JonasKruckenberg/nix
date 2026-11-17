@@ -28,14 +28,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Private: fetching it needs a token, on ardmore (secrets/github-token.conf.age) and in CI.
-    # `release` only ever holds main commits refractory's CI passed. nixpkgs follows ours, so the
-    # FoundationDB client it links is the server's version.
-    refractory = {
-      url = "github:JonasKruckenberg/refractory/release";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     apple-silicon-support = {
       url = "github:nix-community/nixos-apple-silicon/main";
       inputs.nixpkgs.follows = "nixpkgs";

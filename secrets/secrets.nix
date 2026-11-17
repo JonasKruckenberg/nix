@@ -8,11 +8,6 @@ let
   ardmore = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGUKx/lzVEe1tJbz4Dcx58PoNMGvQ8O3zjKiJjasDJbs";
 in
 {
-  # `access-tokens = github.com=<PAT>`: read access to the private refractory repository.
-  "github-token.conf.age".publicKeys = [
-    jonas
-    ardmore
-  ];
   # TELEGRAM_BOT_TOKEN=… and TELEGRAM_CHAT_ID=…, for Alertmanager.
   "telegram.env.age".publicKeys = [
     jonas

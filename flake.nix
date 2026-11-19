@@ -28,6 +28,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # cv, the code-vitals ingester; see modules/server/codevitals.nix.
+    codevitals = {
+      url = "github:mainmatter/codevitals-app";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     apple-silicon-support = {
       url = "github:nix-community/nixos-apple-silicon/main";
       inputs.nixpkgs.follows = "nixpkgs";

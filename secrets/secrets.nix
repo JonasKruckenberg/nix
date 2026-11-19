@@ -13,4 +13,19 @@ in
     jonas
     ardmore
   ];
+
+  # cv's GitHub App credentials (modules/server/codevitals.nix): the PEM private key, the OAuth
+  # client secret, and the webhook secret.
+  "cv-private-key.age".publicKeys = [
+    jonas
+    ardmore
+  ];
+  "cv-client-secret.age".publicKeys = [
+    jonas
+    ardmore
+  ];
+  "cv-webhook-secret.age".publicKeys = [
+    jonas
+    ardmore
+  ];
 }

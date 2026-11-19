@@ -42,6 +42,43 @@
         "type": "github"
       }
     },
+    "codevitals": {
+      "inputs": {
+        "crane": "crane",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "rust-overlay": "rust-overlay"
+      },
+      "locked": {
+        "lastModified": 1795088351,
+        "narHash": "sha256-JFXJTqbIirhK0R0RlJAtX911GFug5xRw4HSoWHA4ILY=",
+        "owner": "mainmatter",
+        "repo": "codevitals-app",
+        "rev": "afb5a2255846c2020d1de64c149367a000b22afa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mainmatter",
+        "repo": "codevitals-app",
+        "type": "github"
+      }
+    },
+    "crane": {
+      "locked": {
+        "lastModified": 1793836618,
+        "narHash": "sha256-TREenflwEjxOSq292FYwbc3kEm7TDRtXCZRNWEdjBmg=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "79fd63528501446749c09f08cad486a58c7d173e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "locked": {
         "lastModified": 1761640442,
@@ -167,12 +204,34 @@
       "inputs": {
         "agenix": "agenix",
         "apple-silicon-support": "apple-silicon-support",
+        "codevitals": "codevitals",
         "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "import-tree": "import-tree",
         "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs",
         "treefmt-nix": "treefmt-nix"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "codevitals",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794820811,
+        "narHash": "sha256-z43rmhOmnCG4gN2EcSm4tzHUSRg7DG5SaGscYreafzg=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "2ff7d39b901d79ee26d26f9fa32f90511eecaa0e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     },
     "treefmt-nix": {

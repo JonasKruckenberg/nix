@@ -26,6 +26,7 @@ in
           tailscale
           observability
           jorb
+          codevitals
         ])
         ++ [
           inputs.agenix.nixosModules.default

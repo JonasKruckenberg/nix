@@ -27,8 +27,8 @@
       services.cv = {
         enable = true;
         listen = "127.0.0.1:${toString port}";
-        appId = 0; # TODO: the App's ID
-        clientId = "TODO"; # the App's client ID; not a secret
+        appId = 5832317;
+        clientId = "Iv23liqh8y4O9ZOSQDbh";
         privateKeyFile = config.age.secrets.cv-private-key.path;
         clientSecretFile = config.age.secrets.cv-client-secret.path;
         webhookSecretFile = config.age.secrets.cv-webhook-secret.path;
